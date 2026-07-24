@@ -25,7 +25,7 @@
   html,body{margin:0;padding:0;}
   body{
     font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    background:var(--ct-bg);
+    background:var(--ct-grey-bg);
     color:var(--ct-text);
     min-height:100vh;
     line-height:1.5;
@@ -56,14 +56,15 @@
     border-radius:var(--radius);
     padding:32px;
     box-shadow:0 1px 2px rgba(35,59,71,.05), 0 8px 24px rgba(35,59,71,.06);
-    border:1px solid #eee2cd;
+    border:1px solid #e5e5e5;
   }
   .owl-card{
-    background:var(--ct-grey-bg);
+    background:#fff;
     border-radius:var(--radius);
     padding:26px 24px 22px;
     text-align:center;
-    border:1px solid #eaeaea;
+    border:1px solid #e5e5e5;
+    box-shadow:0 1px 2px rgba(35,59,71,.05), 0 8px 24px rgba(35,59,71,.06);
     position:sticky;
     top:24px;
   }
@@ -83,8 +84,8 @@
   }
   .owl-message{
     font-size:15px;color:var(--ct-dark);
-    background:#fff;border-radius:14px;padding:16px 16px;
-    border:1px solid #e7e7e7;
+    background:var(--ct-grey-bg);border-radius:14px;padding:16px 16px;
+    border:1px solid #ececec;
     min-height:70px;
     display:flex;align-items:center;justify-content:center;
   }
@@ -103,6 +104,18 @@
     border-radius:10px;padding:10px 14px;margin-bottom:18px;
   }
   .task-recap b{color:var(--ct-text);}
+
+  .completed-log{
+    font-size:13px;color:var(--ct-text-mid);background:var(--ct-grey-bg);
+    border-radius:10px;padding:10px 14px;margin-bottom:18px;
+  }
+  .completed-log-title{
+    font-size:11px;font-weight:600;color:var(--ct-text-light);
+    text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;
+  }
+  .completed-log ol{margin:0;padding-left:18px;}
+  .completed-log li{margin-bottom:3px;color:var(--ct-text);}
+  .completed-log li:last-child{margin-bottom:0;}
 
   textarea, input[type=text]{
     width:100%;
@@ -267,6 +280,7 @@
       <!-- STEP: ACTION -->
       <div class="step" id="step-action">
         <div class="task-recap" id="actionTaskRecap"></div>
+        <div class="completed-log" id="completedLog" style="display:none;"></div>
         <h1 class="step-title" id="actionTitle">What's something you could do in the next 10 minutes about this?</h1>
         <p class="step-help">Keep it small. It just needs to move things forward a little.</p>
         <textarea id="actionInput" placeholder="e.g. Open the doc and write a rough outline..."></textarea>
@@ -382,15 +396,44 @@
   var LS_ENDS_AT = 'unstuck_timerEndsAt';
   var LS_TASK = 'unstuck_task';
   var LS_ACTION = 'unstuck_action';
+  var LS_HISTORY = 'unstuck_history';
   var LS_INTRO_SEEN = 'unstuck_introSeen';
 
   var state = {
     task: '',
     action: '',
+    history: [], // completed steps for the CURRENT task, most recent last
     firstCycle: true,
     timerEndsAt: null,
     tickHandle: null
   };
+
+  function loadHistory(){
+    try {
+      var raw = localStorage.getItem(LS_HISTORY);
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) { return []; }
+  }
+  function saveHistory(){
+    localStorage.setItem(LS_HISTORY, JSON.stringify(state.history));
+  }
+  function clearHistory(){
+    state.history = [];
+    localStorage.removeItem(LS_HISTORY);
+  }
+  function renderHistoryLog(){
+    var el = document.getElementById('completedLog');
+    if (!el) return;
+    if (!state.history.length){
+      el.style.display = 'none';
+      el.innerHTML = '';
+      return;
+    }
+    el.style.display = 'block';
+    el.innerHTML = '<div class="completed-log-title">Completed so far</div>' +
+      '<ol>' + state.history.map(function(a){ return '<li>' + escapeHtml(a) + '</li>'; }).join('') + '</ol>';
+  }
 
   function totalCycles(){ return parseInt(localStorage.getItem(LS_TOTAL) || '0', 10); }
   function setTotalCycles(n){ localStorage.setItem(LS_TOTAL, String(n)); }
@@ -494,6 +537,7 @@
   taskContinue.addEventListener('click', function(){
     state.task = taskInput.value.trim();
     localStorage.setItem(LS_TASK, state.task);
+    clearHistory();
     goToActionStep(true);
   });
 
@@ -520,7 +564,7 @@
     fetch(SUGGEST_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Proto-Token': SUGGEST_PROTO_TOKEN },
-      body: JSON.stringify({ task: state.task })
+      body: JSON.stringify({ task: state.task, previousActions: state.history })
     })
       .then(function(r){
         if (!r.ok) return r.json().then(function(d){ throw new Error(d.error || ('HTTP ' + r.status)); });
@@ -564,6 +608,7 @@
     actionInput.value = '';
     actionContinue.disabled = true;
     resetAiNotices();
+    renderHistoryLog();
     showStep('action');
   }
 
@@ -612,6 +657,10 @@
   function completeCycle(){
     if (state.tickHandle) clearInterval(state.tickHandle);
     localStorage.removeItem(LS_ENDS_AT);
+    if (state.action){
+      state.history.push(state.action);
+      saveHistory();
+    }
     playBell();
     setTotalCycles(totalCycles() + 1);
     renderOwl();
@@ -629,6 +678,7 @@
     localStorage.removeItem(LS_TASK);
     localStorage.removeItem(LS_ACTION);
     state.task = ''; state.action = '';
+    clearHistory();
     taskInput.value = '';
     taskContinue.disabled = true;
     showStep('task');
@@ -658,6 +708,7 @@
     var storedEndsAt = parseInt(localStorage.getItem(LS_ENDS_AT) || '0', 10);
     var storedTask = localStorage.getItem(LS_TASK) || '';
     var storedAction = localStorage.getItem(LS_ACTION) || '';
+    state.history = loadHistory();
 
     if (storedEndsAt && storedTask){
       state.task = storedTask;
@@ -668,9 +719,7 @@
         return;
       } else {
         // they were away past the end time — credit the round, welcome them back
-        localStorage.removeItem(LS_ENDS_AT);
-        setTotalCycles(totalCycles() + 1);
-        renderOwl();
+        completeCycle();
         goToActionStep(false);
         return;
       }
