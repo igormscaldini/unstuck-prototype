@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unstuck — a Clearer Thinking prototype</title>
+<meta name="description" content="A 10-minute momentum tool to help you break a procrastination moment. Clearer Thinking prototype.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ct-blue:#0885f8;
+    --ct-gold:#fecb02;
+    --ct-orange:#f8911b;
+    --ct-dark:#233b47;
+    --ct-bg:#f9f1e3;
+    --ct-grey-bg:#f5f5f5;
+    --ct-text:#303030;
+    --ct-text-mid:#737373;
+    --ct-text-light:#A6A6A6;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--ct-bg);
+    color:var(--ct-text);
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 60px;}
+
+  header.top{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  header.top img{height:34px;display:block;}
+  header.top .proto-tag{
+    font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--ct-orange);background:#fff4e2;border:1px solid #fbdca7;
+    padding:3px 9px;border-radius:100px;
+  }
+  .subhead{color:var(--ct-text-mid);font-size:15px;margin:2px 0 28px;}
+
+  .layout{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width:760px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:#fff;
+    border-radius:var(--radius);
+    padding:32px;
+    box-shadow:0 1px 2px rgba(35,59,71,.05), 0 8px 24px rgba(35,59,71,.06);
+    border:1px solid #eee2cd;
+  }
+  .owl-card{
+    background:var(--ct-grey-bg);
+    border-radius:var(--radius);
+    padding:26px 24px 22px;
+    text-align:center;
+    border:1px solid #eaeaea;
+    position:sticky;
+    top:24px;
+  }
+  .owl-card .owl-svg-holder{width:150px;margin:6px auto 14px;}
+  .owl-card .owl-svg-holder svg{width:100%;height:auto;display:block;}
+  .owl-stage-label{
+    font-size:12px;font-weight:600;color:var(--ct-text-light);
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;
+  }
+  .owl-message{
+    font-size:15px;color:var(--ct-dark);
+    background:#fff;border-radius:14px;padding:16px 16px;
+    border:1px solid #e7e7e7;
+    min-height:70px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .owl-progress{
+    margin-top:16px;display:flex;gap:6px;justify-content:center;
+  }
+  .owl-progress span{
+    width:8px;height:8px;border-radius:50%;background:#ddd;
+  }
+  .owl-progress span.filled{background:var(--ct-blue);}
+
+  h1.step-title{font-size:22px;margin:0 0 6px;color:var(--ct-dark);}
+  p.step-help{color:var(--ct-text-mid);font-size:14.5px;margin:0 0 20px;}
+  .task-recap{
+    font-size:13.5px;color:var(--ct-text-mid);background:var(--ct-grey-bg);
+    border-radius:10px;padding:10px 14px;margin-bottom:18px;
+  }
+  .task-recap b{color:var(--ct-text);}
+
+  textarea, input[type=text]{
+    width:100%;
+    font-family:inherit;
+    font-size:16px;
+    padding:14px 16px;
+    border-radius:12px;
+    border:1.5px solid #e2e2e2;
+    resize:vertical;
+    min-height:78px;
+    color:var(--ct-text);
+    transition:border-color .15s;
+  }
+  textarea:focus, input[type=text]:focus{
+    outline:none;border-color:var(--ct-blue);
+  }
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px;}
+  .chip{
+    font-size:13.5px;
+    padding:8px 14px;
+    border-radius:100px;
+    border:1.5px solid var(--ct-blue);
+    color:var(--ct-blue);
+    background:#fff;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .chip:hover{background:#e8f3ff;}
+  .not-sure-label{font-size:13px;color:var(--ct-text-light);margin:16px 0 0;}
+
+  .btn-row{display:flex;align-items:center;gap:14px;margin-top:26px;}
+  .btn{
+    font-family:inherit;
+    font-size:15.5px;font-weight:600;
+    padding:13px 26px;
+    border-radius:100px;
+    border:none;
+    cursor:pointer;
+    transition:transform .1s, box-shadow .15s;
+  }
+  .btn-primary{background:var(--ct-blue);color:#fff;}
+  .btn-primary:hover{box-shadow:0 6px 16px rgba(8,133,248,.28);}
+  .btn-primary:disabled{background:#cfe4fb;cursor:not-allowed;box-shadow:none;}
+  .btn-primary:active:not(:disabled){transform:scale(.98);}
+  .link-btn{
+    background:none;border:none;font-family:inherit;
+    color:var(--ct-text-mid);font-size:14.5px;cursor:pointer;text-decoration:underline;
+    padding:6px 0;
+  }
+  .link-btn:hover{color:var(--ct-text);}
+
+  .timer-display{
+    text-align:center;padding:14px 0 6px;
+  }
+  .timer-display .clock{
+    font-size:64px;font-weight:800;color:var(--ct-blue);
+    letter-spacing:.02em;font-variant-numeric:tabular-nums;
+  }
+  .timer-display .clock-sub{color:var(--ct-text-mid);font-size:15px;margin-top:6px;}
+  .timer-ring{
+    width:180px;height:180px;margin:10px auto 6px;position:relative;
+  }
+  .timer-ring svg{transform:rotate(-90deg);}
+  .timer-ring circle{fill:none;stroke-width:10;}
+  .timer-ring .bg{stroke:#eee;}
+  .timer-ring .fg{stroke:var(--ct-blue);stroke-linecap:round;transition:stroke-dashoffset 1s linear;}
+  .timer-ring .clock-center{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+  }
+
+  .fine-print{font-size:13px;color:var(--ct-text-light);margin-top:22px;text-align:center;}
+
+  .toast{
+    background:#eefcf1;border:1px solid #b9ecc4;color:#20693a;
+    border-radius:12px;padding:12px 16px;font-size:14px;margin-bottom:18px;
+  }
+
+  footer.foot{
+    margin-top:34px;text-align:center;font-size:12.5px;color:var(--ct-text-light);
+  }
+  footer.foot a, footer.foot button.tiny-reset{
+    color:var(--ct-text-light);text-decoration:underline;background:none;border:none;
+    font-family:inherit;font-size:12.5px;cursor:pointer;padding:0;
+  }
+
+  .step{display:none;}
+  .step.active{display:block;animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  /* intro modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(35,59,71,.45);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    z-index:50;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal{
+    background:#fff;border-radius:20px;max-width:460px;width:100%;
+    padding:32px;text-align:left;
+  }
+  .modal h2{margin:0 0 12px;font-size:20px;color:var(--ct-dark);}
+  .modal p{color:var(--ct-text-mid);font-size:14.5px;margin:0 0 12px;}
+  .modal .btn-primary{width:100%;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="introModal">
+  <div class="modal">
+    <h2>🦉 Welcome to Unstuck</h2>
+    <p>A Clearer Thinking prototype. When you're stuck procrastinating on something, this tool gets you moving in three quick steps: name the task, name one small thing you could do in the next 10 minutes, then start a timer and go do it.</p>
+    <p>No account, no judgment — just come back when the timer's done and do it again. An owl keeps you company and grows a little each round.</p>
+    <button class="btn btn-primary" id="introDismiss">Let's go</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="top">
+    <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOC4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCA3NTAgMTIwIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA3NTAgMTIwOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDojMzAzMDMwO30NCgkuc3Qxe2ZpbGw6bm9uZTtzdHJva2U6IzMwMzAzMDtzdHJva2Utd2lkdGg6OS4xMzg0O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3Qye2ZpbGw6bm9uZTtzdHJva2U6IzA4ODVGODtzdHJva2Utd2lkdGg6Ny42MTUzO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3Qze2ZpbGw6bm9uZTtzdHJva2U6IzMwMzAzMDtzdHJva2Utd2lkdGg6MTcuNjM0MztzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQoJLnN0NHtmaWxsOm5vbmU7c3Ryb2tlOiMwODg1Rjg7c3Ryb2tlLXdpZHRoOjE0LjkyMTM7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLW1pdGVybGltaXQ6MTA7fQ0KCS5zdDV7ZmlsbDpub25lO3N0cm9rZTojMzAzMDMwO3N0cm9rZS13aWR0aDoxMi4zMjcxO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3Q2e2ZpbGw6bm9uZTtzdHJva2U6IzA4ODVGODtzdHJva2Utd2lkdGg6MTAuNDMwNjtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQoJLnN0N3tmaWxsOiNGRkZGRkY7fQ0KCS5zdDh7ZmlsbDpub25lO3N0cm9rZTojRkZGRkZGO3N0cm9rZS13aWR0aDo3LjMxNjY7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLW1pdGVybGltaXQ6MTA7fQ0KCS5zdDl7ZmlsbDpub25lO3N0cm9rZTojMDg4NUY4O3N0cm9rZS13aWR0aDo2LjA5NzI7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLW1pdGVybGltaXQ6MTA7fQ0KCS5zdDEwe2ZpbGw6bm9uZTtzdHJva2U6I0ZGRkZGRjtzdHJva2Utd2lkdGg6MTMuNDMwOTtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQoJLnN0MTF7ZmlsbDpub25lO3N0cm9rZTojMDg4NUY4O3N0cm9rZS13aWR0aDoxMS4xOTI0O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3QxMntmaWxsOiMwODg1Rjg7fQ0KCS5zdDEze2ZpbGw6bm9uZTtzdHJva2U6IzMwMzAzMDtzdHJva2Utd2lkdGg6Ny4zMTY2O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3QxNHtmaWxsOm5vbmU7c3Ryb2tlOiNGRkZGRkY7c3Ryb2tlLXdpZHRoOjYuMDk3MjtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQoJLnN0MTV7ZmlsbDpub25lO3N0cm9rZTojMzAzMDMwO3N0cm9rZS13aWR0aDoxMy40MzA5O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3QxNntmaWxsOm5vbmU7c3Ryb2tlOiNGRkZGRkY7c3Ryb2tlLXdpZHRoOjExLjE5MjQ7c3Ryb2tlLWxpbmVjYXA6cm91bmQ7c3Ryb2tlLW1pdGVybGltaXQ6MTA7fQ0KCS5zdDE3e2ZpbGw6bm9uZTtzdHJva2U6IzMwMzAzMDtzdHJva2Utd2lkdGg6MjIuODcxMjtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQoJLnN0MTh7ZmlsbDpub25lO3N0cm9rZTojMDg4NUY4O3N0cm9rZS13aWR0aDoxOS4wNTkzO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3QxOXtmaWxsOiMyMzFGMjA7fQ0KCS5zdDIwe2ZpbGw6bm9uZTtzdHJva2U6IzMwMzAzMDtzdHJva2Utd2lkdGg6OC40OTU3O3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1taXRlcmxpbWl0OjEwO30NCgkuc3QyMXtmaWxsOm5vbmU7c3Ryb2tlOiMwODg1Rjg7c3Ryb2tlLXdpZHRoOjcuMDc5ODtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQo8L3N0eWxlPg0KPGcgaWQ9IkxheWVyXzItMl8wMDAwMDAwNDUxMzY5Njc1ODY4NjE4ODEzMDAwMDAwMTMxMDkxOTE5NjE0NDY2ODYwN18iPg0KCTxnPg0KCQk8Zz4NCgkJCTxnPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xODAuMSw0NC45Yy0xLjItMS41LTIuNy0yLjctNC42LTMuNmMtMS44LTAuOS0zLjctMS4zLTUuNy0xLjNjLTIuNCwwLTQuNiwwLjQtNi41LDEuMw0KCQkJCQljLTIsMC45LTMuNiwyLjItNSwzLjdjLTEuNCwxLjUtMi40LDMuNC0zLjIsNS40Yy0wLjgsMi4xLTEuMiw0LjQtMS4yLDYuN2MwLDIuMywwLjMsNC40LDEuMSw2LjNjMC44LDIsMS43LDMuOCwzLjIsNS4yDQoJCQkJCWMxLjMsMS41LDMsMi43LDUsMy42YzIsMC45LDQuMSwxLjMsNi42LDEuM3M0LjYtMC41LDYuNC0xLjVjMS44LTEsMy40LTIuNCw0LjctNC4ybDQuOSwzLjdjLTAuMywwLjQtMC45LDEuMS0xLjYsMS44DQoJCQkJCWMtMC44LDAuOS0xLjgsMS42LTMuMiwyLjVjLTEuMywwLjktMi45LDEuNS00LjgsMi4yYy0xLjgsMC43LTQsMC45LTYuNCwwLjljLTMuNCwwLTYuNC0wLjctOS0yYy0yLjctMS4zLTUtMi45LTYuOS01DQoJCQkJCWMtMS44LTIuMS0zLjQtNC41LTQuNC03LjFjLTEtMi42LTEuNS01LjItMS41LTcuOWMwLTMuMywwLjUtNi4zLDEuNi05LjFjMS4xLTIuNywyLjYtNS4yLDQuNi03LjJjMi0yLjEsNC4yLTMuNiw3LTQuNw0KCQkJCQljMi43LTEuMSw1LjctMS42LDktMS42YzIuOCwwLDUuNSwwLjUsOC4zLDEuNmMyLjcsMS4xLDQuOSwyLjcsNi42LDVMMTgwLjEsNDQuOUwxODAuMSw0NC45eiIvPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xOTIuOCwzNS43aDUuOHYzNy4xSDIxOHY1LjRoLTI1LjJWMzUuN3oiLz4NCgkJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMjIzLjksMzUuN2gyNy40djUuNGgtMjEuNnYxMi42aDIwLjF2NS40aC0yMC4xdjEzLjZoMjIuN3Y1LjRoLTI4LjVWMzUuN0wyMjMuOSwzNS43eiIvPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0yNzMuOCwzNS43aDUuMmwxOC4yLDQyLjRoLTYuN2wtNC4yLTEwLjRIMjY2bC00LjIsMTAuNGgtNi42TDI3My44LDM1LjdMMjczLjgsMzUuN3ogTTI4NC4xLDYyLjYNCgkJCQkJbC03LjktMTkuNUgyNzZMMjY4LDYyLjZIMjg0LjFMMjg0LjEsNjIuNnoiLz4NCgkJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzAyLjcsMzUuN2gxNC45YzIuNywwLDQuOSwwLjMsNi43LDEuMWMxLjcsMC44LDMuMiwxLjYsNC4xLDIuOGMxLDEuMiwxLjcsMi40LDIuMiwzLjgNCgkJCQkJYzAuNCwxLjQsMC41LDIuOCwwLjUsNC4xYzAsMS4zLTAuMiwyLjYtMC44LDMuOXMtMS4yLDIuNC0yLjEsMy40Yy0wLjksMS0yLDEuOC0zLjMsMi42Yy0xLjMsMC44LTIuNywxLjEtNC40LDEuM2wxMi4xLDE5LjQNCgkJCQkJaC03LjJsLTEwLjgtMTguN2gtNi40djE4LjdoLTUuOFYzNS43TDMwMi43LDM1Ljd6IE0zMDguNCw1NC41aDcuNWMxLjEsMCwyLjItMC4xLDMuNC0wLjJzMi4xLTAuNSwyLjktMXMxLjUtMS4yLDIuMS0yLjENCgkJCQkJczAuOC0yLjEsMC44LTMuNWMwLTEuNC0wLjItMi42LTAuOC0zLjVzLTEuMi0xLjYtMi4xLTIuMWMtMC45LTAuNC0xLjgtMC44LTIuOS0xcy0yLjItMC4yLTMuNC0wLjJoLTcuNVY1NC41eiIvPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0zMzkuMywzNS43aDI3LjR2NS40aC0yMS42djEyLjZoMjAuMXY1LjRoLTIwLjF2MTMuNmgyMi43djUuNGgtMjguNVYzNS43TDMzOS4zLDM1Ljd6Ii8+DQoJCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM3NiwzNS43aDE0LjljMi43LDAsNC45LDAuMyw2LjcsMS4xYzEuNywwLjgsMy4yLDEuNiw0LjEsMi44YzEsMS4yLDEuNywyLjQsMi4yLDMuOA0KCQkJCQljMC40LDEuNCwwLjUsMi44LDAuNSw0LjFjMCwxLjMtMC4yLDIuNi0wLjgsMy45Yy0wLjUsMS4zLTEuMiwyLjQtMi4xLDMuNGMtMC45LDEtMiwxLjgtMy4zLDIuNmMtMS4zLDAuOC0yLjcsMS4xLTQuNCwxLjMNCgkJCQkJbDEyLjEsMTkuNGgtNy4ybC0xMC44LTE4LjdoLTYuNHYxOC43SDM3NkwzNzYsMzUuN0wzNzYsMzUuN3ogTTM4MS44LDU0LjVoNy41YzEuMSwwLDIuMi0wLjEsMy40LTAuMmMxLjItMC4xLDIuMS0wLjUsMi45LTENCgkJCQkJYzAuOS0wLjQsMS41LTEuMiwyLjEtMi4xczAuOC0yLjEsMC44LTMuNWMwLTEuNC0wLjItMi42LTAuOC0zLjVzLTEuMi0xLjYtMi4xLTIuMWMtMC45LTAuNC0xLjgtMC44LTIuOS0xDQoJCQkJCWMtMS4xLTAuMi0yLjItMC4yLTMuNC0wLjJoLTcuNVY1NC41eiIvPg0KCQkJPC9nPg0KCQkJPGc+DQoJCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTQ0Ny4yLDQxLjJoLTEzLjd2LTUuNGgzMy4xdjUuNGgtMTMuN3YzNy4xaC01LjhMNDQ3LjIsNDEuMkw0NDcuMiw0MS4yeiIvPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00NzIuOCwzNS43aDUuOHYxNy42aDIyVjM1LjdoNS44djQyLjRoLTUuOFY1OC44aC0yMnYxOS40aC01LjhWMzUuN3oiLz4NCgkJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTE3LjIsMzUuN2g1Ljh2NDIuNGgtNS44VjM1Ljd6Ii8+DQoJCQkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTUzMy44LDM1LjdoNy41bDIzLjQsMzQuOWgwLjFWMzUuN2g1Ljh2NDIuNGgtNy4zbC0yMy42LTM0LjloLTAuMXYzNC45aC01LjhWMzUuN0w1MzMuOCwzNS43eiIvPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01ODEuNiwzNS43aDUuOHYxOC40aDAuNGwxOC43LTE4LjRoOC4xbC0yMC41LDE5LjZMNjE2LDc4LjJoLTguNEw1ODcuOCw1N2gtMC40djIxLjJoLTUuOFYzNS43TDU4MS42LDM1LjcNCgkJCQkJeiIvPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik02MjAuNCwzNS43aDUuOHY0Mi40aC01LjhWMzUuN3oiLz4NCgkJCQk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNjM3LjEsMzUuN2g3LjVMNjY4LDcwLjdoMC4xVjM1LjdoNS44djQyLjRoLTcuM0w2NDMsNDMuMmgtMC4xdjM0LjloLTUuOFYzNS43eiIvPg0KCQkJCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik03MjEsNTQuNXYyMC45Yy0xLjEsMC43LTIuMiwxLjItMy41LDEuNmMtMS4zLDAuNC0yLjcsMC45LTQuMSwxLjJjLTEuNCwwLjMtMi44LDAuNS00LjQsMC44DQoJCQkJCWMtMS40LDAuMi0yLjgsMC4yLTQuMSwwLjJjLTMuNiwwLTYuNy0wLjUtOS42LTEuOGMtMi44LTEuMy01LjItMi44LTcuMi00LjljLTItMi4xLTMuNC00LjQtNC41LTcuMWMtMS4xLTIuNy0xLjUtNS41LTEuNS04LjUNCgkJCQkJYzAtMy4yLDAuNS02LjEsMS42LTguOGMxLjEtMi43LDIuNi01LjEsNC42LTcuMWMyLTIsNC4yLTMuNiw3LTQuN2MyLjctMS4xLDUuNy0xLjcsOC45LTEuN2MzLjksMCw3LjEsMC41LDkuNiwxLjUNCgkJCQkJYzIuNSwxLDQuNiwyLjMsNi4yLDRsLTQuMSw0LjRjLTEuNy0xLjYtMy42LTIuOC01LjUtMy41Yy0yLTAuNy00LTEtNi4yLTFjLTIuNCwwLTQuNywwLjQtNi42LDEuM3MtMy42LDIuMS01LDMuNg0KCQkJCQlzLTIuNSwzLjMtMy4zLDUuM2MtMC44LDIuMS0xLjEsNC4yLTEuMSw2LjVjMCwyLjMsMC40LDQuNiwxLjMsNi42YzAuOSwyLjEsMiwzLjgsMy41LDUuM2MxLjUsMS41LDMuMywyLjcsNS4yLDMuNg0KCQkJCQlzNC4xLDEuMyw2LjUsMS4zYzIuMSwwLDMuOS0wLjIsNS44LTAuNWMxLjgtMC4zLDMuNC0wLjksNC43LTEuNlY1OS45aC05LjV2LTUuNEg3MjFMNzIxLDU0LjV6Ii8+DQoJCQk8L2c+DQoJCTwvZz4NCgk8L2c+DQoJPGc+DQoJCTxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0xMDcuMyw3NC40Yy0xLjMsMS45LTIuNywzLjYtNC40LDUuM2MtMTQuMiwxNC4yLTM3LjEsMTQuMi01MS4zLDBzLTE0LjItMzcuMSwwLTUxLjNzMzcuMS0xNC4yLDUxLjMsMA0KCQkJYzEuNywxLjcsMy4xLDMuNCw0LjQsNS4zIi8+DQoJCTxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik02Mi41LDY2LjVjLTYuNC03LjYtNi4xLTE5LDEuMS0yNi4yYzQuNy00LjcsMTEuMy02LjUsMTcuNC01LjMiLz4NCgkJPGxpbmUgY2xhc3M9InN0MSIgeDE9IjUxIiB5MT0iODAuMyIgeDI9IjI5IiB5Mj0iMTAyLjIiLz4NCgk8L2c+DQo8L2c+DQo8L3N2Zz4NCg==" alt="Clearer Thinking">
+    <span class="proto-tag">Prototype — for internal testing</span>
+  </header>
+  <p class="subhead">Unstuck — a 10-minute momentum tool for procrastination</p>
+
+  <div class="layout">
+    <div class="card">
+
+      <!-- STEP: TASK -->
+      <div class="step" id="step-task">
+        <h1 class="step-title">What are you procrastinating on?</h1>
+        <p class="step-help">Briefly explain the task. If you're not sure, pick one below.</p>
+        <textarea id="taskInput" placeholder="e.g. Writing the first draft of that report..."></textarea>
+        <div class="not-sure-label">Not sure? Pick one:</div>
+        <div class="chips" id="taskChips"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="taskContinue" disabled>Continue →</button>
+        </div>
+      </div>
+
+      <!-- STEP: ACTION -->
+      <div class="step" id="step-action">
+        <div class="task-recap" id="actionTaskRecap"></div>
+        <h1 class="step-title" id="actionTitle">What's something you could do in the next 10 minutes about this?</h1>
+        <p class="step-help">Keep it small. It just needs to move things forward a little.</p>
+        <textarea id="actionInput" placeholder="e.g. Open the doc and write a rough outline..."></textarea>
+        <div class="not-sure-label">Not sure? Pick one:</div>
+        <div class="chips" id="actionChips"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="actionContinue" disabled>Continue →</button>
+          <button class="link-btn" id="actionBack">← back</button>
+        </div>
+      </div>
+
+      <!-- STEP: CONFIRM -->
+      <div class="step" id="step-confirm">
+        <h1 class="step-title">Ready to start?</h1>
+        <p class="step-help">A 10-minute timer will start. Leave this tab open and go do it — you'll hear a soft chime when time's up.</p>
+        <div class="task-recap">
+          <div><b>Task:</b> <span id="confirmTask"></span></div>
+          <div style="margin-top:6px;"><b>Next 10 minutes:</b> <span id="confirmAction"></span></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="confirmStart">Yes, let's go →</button>
+          <button class="link-btn" id="confirmBack">← back</button>
+        </div>
+      </div>
+
+      <!-- STEP: TIMER -->
+      <div class="step" id="step-timer">
+        <h1 class="step-title">Go do it.</h1>
+        <p class="step-help">Come back here when the timer ends.</p>
+        <div class="timer-ring">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <circle class="bg" cx="90" cy="90" r="80"></circle>
+            <circle class="fg" id="ringFg" cx="90" cy="90" r="80" stroke-dasharray="502.4" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="clock-center">
+            <div class="clock" id="clockDisplay">10:00</div>
+          </div>
+        </div>
+        <p class="fine-print" id="timerTaskLine"></p>
+      </div>
+
+      <!-- STEP: CYCLE DONE (brief, then auto-advances to action step) -->
+      <div class="step" id="step-cycledone">
+        <div class="toast">🔔 Nice — you did the hard part. That's one more round done.</div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="cycleContinue">What's next? →</button>
+          <button class="link-btn" id="cycleNewTask">Start a different task</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- OWL COMPANION -->
+    <div class="owl-card">
+      <div class="owl-svg-holder" id="owlSvgHolder"></div>
+      <div class="owl-stage-label" id="owlStageLabel">Egg</div>
+      <div class="owl-message" id="owlMessage"></div>
+      <div class="owl-progress" id="owlProgress"></div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    Clearer Thinking internal prototype — not for public release.
+    &nbsp;·&nbsp;
+    <button class="tiny-reset" id="resetOwl">reset owl progress (testing)</button>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- config ----------
+  var params = new URLSearchParams(location.search);
+  var FAST = params.get('fast') === '1';
+  var CYCLE_SECONDS = FAST ? 20 : 600; // 20s in ?fast=1 mode for quick team testing, else 10 min
+  var RING_CIRC = 502.4;
+
+  var TASK_PRESETS = [
+    "A work task", "A chore or errand", "A hard conversation",
+    "Something creative", "Studying / a course", "Admin or paperwork"
+  ];
+  var ACTION_PRESETS = [
+    "Open it and just look at it", "Do the smallest possible piece",
+    "List the first 3 steps", "Set up my workspace",
+    "Send one message about it", "Just sit with it for 2 minutes"
+  ];
+  var MESSAGES = [
+    "Dealing with procrastination can be genuinely challenging — and you're capable of doing this anyway. Take a deep breath and go for it.",
+    "Struggling to start doesn't mean something's wrong with you — it's a skill anyone can build, like learning an instrument. You're building it right now.",
+    "Whatever you're feeling about this task right now is okay. No judgment here — just the next small step.",
+    "That voice telling you that you can't or shouldn't? It's just a thought, not a fact. You can let it pass and start anyway.",
+    "You're far from alone — procrastination affects a huge number of people. It's not a character flaw, it's just something brains do."
+  ];
+
+  var OWL_STAGES = ["Egg", "Cracking", "Hatchling", "Fledgling", "Full owl"];
+  var MAX_STAGE = OWL_STAGES.length - 1;
+
+  // ---------- state ----------
+  var LS_TOTAL = 'unstuck_totalCycles';
+  var LS_ENDS_AT = 'unstuck_timerEndsAt';
+  var LS_TASK = 'unstuck_task';
+  var LS_ACTION = 'unstuck_action';
+  var LS_INTRO_SEEN = 'unstuck_introSeen';
+
+  var state = {
+    task: '',
+    action: '',
+    firstCycle: true,
+    timerEndsAt: null,
+    tickHandle: null
+  };
+
+  function totalCycles(){ return parseInt(localStorage.getItem(LS_TOTAL) || '0', 10); }
+  function setTotalCycles(n){ localStorage.setItem(LS_TOTAL, String(n)); }
+  function currentStageIndex(){ return Math.min(totalCycles(), MAX_STAGE); }
+
+  // ---------- steps ----------
+  var steps = ['task','action','confirm','timer','cycledone'];
+  function showStep(name){
+    steps.forEach(function(s){
+      document.getElementById('step-'+s).classList.toggle('active', s === name);
+    });
+  }
+
+  // ---------- chips ----------
+  function buildChips(container, list, targetInput, onPick){
+    container.innerHTML = '';
+    list.forEach(function(text){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = text;
+      b.addEventListener('click', function(){
+        targetInput.value = text;
+        targetInput.dispatchEvent(new Event('input'));
+        if (onPick) onPick();
+      });
+      container.appendChild(b);
+    });
+  }
+
+  // ---------- owl rendering ----------
+  var OWL_SVGS = [
+    // 0 Egg
+    '<svg viewBox="0 0 200 200"><ellipse cx="100" cy="150" rx="60" ry="14" fill="#eee2cd"/><path d="M100 40 C60 40 42 95 42 130 C42 165 68 178 100 178 C132 178 158 165 158 130 C158 95 140 40 100 40 Z" fill="#f9f1e3" stroke="#233b47" stroke-width="4"/><circle cx="78" cy="110" r="5" fill="#0885f8"/><circle cx="118" cy="90" r="4" fill="#0885f8"/><circle cx="112" cy="140" r="4.5" fill="#0885f8"/><circle cx="70" cy="80" r="3.5" fill="#0885f8"/></svg>',
+    // 1 Cracking
+    '<svg viewBox="0 0 200 200"><ellipse cx="100" cy="150" rx="60" ry="14" fill="#eee2cd"/><path d="M100 40 C60 40 42 95 42 130 C42 165 68 178 100 178 C132 178 158 165 158 130 C158 95 140 40 100 40 Z" fill="#f9f1e3" stroke="#233b47" stroke-width="4"/><path d="M75 62 L92 82 L80 96 L100 118" fill="none" stroke="#233b47" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="108" r="7" fill="#233b47"/><circle cx="112" cy="108" r="7" fill="#233b47"/><circle cx="92" cy="106" r="2" fill="#fff"/><circle cx="114" cy="106" r="2" fill="#fff"/><path d="M97 118 L105 118 L101 126 Z" fill="#f8911b"/></svg>',
+    // 2 Hatchling
+    '<svg viewBox="0 0 200 200"><ellipse cx="100" cy="168" rx="46" ry="8" fill="#eee2cd"/><ellipse cx="100" cy="118" rx="52" ry="48" fill="#8fc3fb"/><ellipse cx="100" cy="150" rx="34" ry="22" fill="#0885f8"/><circle cx="80" cy="105" r="17" fill="#fff"/><circle cx="120" cy="105" r="17" fill="#fff"/><circle cx="82" cy="107" r="8" fill="#233b47"/><circle cx="122" cy="107" r="8" fill="#233b47"/><circle cx="84" cy="104" r="2.5" fill="#fff"/><circle cx="124" cy="104" r="2.5" fill="#fff"/><path d="M94 118 L106 118 L100 128 Z" fill="#f8911b"/><ellipse cx="72" cy="150" rx="9" ry="16" fill="#0885f8" transform="rotate(-18 72 150)"/><ellipse cx="128" cy="150" rx="9" ry="16" fill="#0885f8" transform="rotate(18 128 150)"/><path d="M90 170 L86 178 M100 172 L100 180 M110 170 L114 178" stroke="#f8911b" stroke-width="3" stroke-linecap="round"/></svg>',
+    // 3 Fledgling
+    '<svg viewBox="0 0 200 200"><ellipse cx="100" cy="176" rx="50" ry="8" fill="#eee2cd"/><path d="M64 92 L78 74 L86 96 Z" fill="#233b47"/><path d="M136 92 L122 74 L114 96 Z" fill="#233b47"/><ellipse cx="100" cy="112" rx="46" ry="42" fill="#0885f8"/><ellipse cx="100" cy="150" rx="38" ry="34" fill="#0685e8"/><ellipse cx="100" cy="156" rx="22" ry="24" fill="#fecb02"/><circle cx="82" cy="102" r="16" fill="#fff"/><circle cx="118" cy="102" r="16" fill="#fff"/><circle cx="84" cy="104" r="7.5" fill="#233b47"/><circle cx="120" cy="104" r="7.5" fill="#233b47"/><circle cx="86" cy="101" r="2.2" fill="#fff"/><circle cx="122" cy="101" r="2.2" fill="#fff"/><path d="M95 116 L105 116 L100 125 Z" fill="#f8911b"/><ellipse cx="60" cy="140" rx="14" ry="26" fill="#0885f8" transform="rotate(-24 60 140)"/><ellipse cx="140" cy="140" rx="14" ry="26" fill="#0885f8" transform="rotate(24 140 140)"/><ellipse cx="58" cy="146" rx="6" ry="14" fill="#f8911b" transform="rotate(-24 58 146)"/><ellipse cx="142" cy="146" rx="6" ry="14" fill="#f8911b" transform="rotate(24 142 146)"/><path d="M88 178 L84 186 M100 180 L100 188 M112 178 L116 186" stroke="#f8911b" stroke-width="3.5" stroke-linecap="round"/></svg>',
+    // 4 Full owl
+    '<svg viewBox="0 0 200 200"><ellipse cx="100" cy="180" rx="30" ry="6" fill="#eee2cd"/><rect x="86" y="168" width="28" height="14" rx="4" fill="#8a5a2b"/><path d="M58 78 L76 52 L88 82 Z" fill="#233b47"/><path d="M142 78 L124 52 L112 82 Z" fill="#233b47"/><ellipse cx="100" cy="110" rx="54" ry="50" fill="#0885f8"/><ellipse cx="100" cy="160" rx="44" ry="42" fill="#0685e8"/><ellipse cx="100" cy="168" rx="26" ry="30" fill="#fecb02"/><path d="M74 168 q26 14 52 0" fill="none" stroke="#f8911b" stroke-width="4" stroke-linecap="round" opacity=".55"/><circle cx="80" cy="98" r="19" fill="#fff"/><circle cx="120" cy="98" r="19" fill="#fff"/><circle cx="82" cy="100" r="9" fill="#233b47"/><circle cx="122" cy="100" r="9" fill="#233b47"/><circle cx="85" cy="96" r="2.6" fill="#fff"/><circle cx="125" cy="96" r="2.6" fill="#fff"/><path d="M94 114 L106 114 L100 124 Z" fill="#f8911b"/><ellipse cx="52" cy="128" rx="16" ry="34" fill="#0885f8" transform="rotate(-16 52 128)"/><ellipse cx="148" cy="128" rx="16" ry="34" fill="#0885f8" transform="rotate(16 148 128)"/><ellipse cx="50" cy="140" rx="7" ry="18" fill="#f8911b" transform="rotate(-16 50 140)"/><ellipse cx="150" cy="140" rx="7" ry="18" fill="#f8911b" transform="rotate(16 150 140)"/><path d="M85 186 L81 194 M100 188 L100 196 M115 186 L119 194" stroke="#f8911b" stroke-width="4" stroke-linecap="round"/></svg>'
+  ];
+
+  function renderOwl(){
+    var idx = currentStageIndex();
+    document.getElementById('owlSvgHolder').innerHTML = OWL_SVGS[idx];
+    document.getElementById('owlStageLabel').textContent = OWL_STAGES[idx];
+    var prog = document.getElementById('owlProgress');
+    prog.innerHTML = '';
+    for (var i = 0; i <= MAX_STAGE; i++){
+      var dot = document.createElement('span');
+      if (i <= idx) dot.className = 'filled';
+      prog.appendChild(dot);
+    }
+  }
+
+  function rotateOwlMessage(){
+    var m = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+    document.getElementById('owlMessage').textContent = m;
+  }
+
+  // ---------- audio: synthesized bell (no external asset) ----------
+  var audioCtx = null;
+  function ensureAudio(){
+    if (!audioCtx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function playBell(){
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    var freqs = [528, 792, 1056]; // fundamental + harmonics, gentle bell-like
+    freqs.forEach(function(f, i){
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      var peak = i === 0 ? 0.22 : 0.07 / (i);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(peak, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.6);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 2.7);
+    });
+  }
+
+  // ---------- task/action steps ----------
+  var taskInput = document.getElementById('taskInput');
+  var taskContinue = document.getElementById('taskContinue');
+  taskInput.addEventListener('input', function(){
+    taskContinue.disabled = taskInput.value.trim().length === 0;
+  });
+  buildChips(document.getElementById('taskChips'), TASK_PRESETS, taskInput, function(){
+    taskContinue.disabled = false;
+  });
+  taskContinue.addEventListener('click', function(){
+    state.task = taskInput.value.trim();
+    localStorage.setItem(LS_TASK, state.task);
+    goToActionStep(true);
+  });
+
+  var actionInput = document.getElementById('actionInput');
+  var actionContinue = document.getElementById('actionContinue');
+  actionInput.addEventListener('input', function(){
+    actionContinue.disabled = actionInput.value.trim().length === 0;
+  });
+  buildChips(document.getElementById('actionChips'), ACTION_PRESETS, actionInput, function(){
+    actionContinue.disabled = false;
+  });
+  document.getElementById('actionBack').addEventListener('click', function(){
+    showStep('task');
+  });
+  actionContinue.addEventListener('click', function(){
+    state.action = actionInput.value.trim();
+    localStorage.setItem(LS_ACTION, state.action);
+    document.getElementById('confirmTask').textContent = state.task;
+    document.getElementById('confirmAction').textContent = state.action;
+    showStep('confirm');
+  });
+
+  function goToActionStep(isFirstCycleForThisTask){
+    document.getElementById('actionTaskRecap').innerHTML = '<b>Task:</b> ' + escapeHtml(state.task);
+    document.getElementById('actionTitle').textContent = isFirstCycleForThisTask
+      ? "What's something you could do in the next 10 minutes about this?"
+      : "What's the next easy thing you can do in 10 minutes?";
+    actionInput.value = '';
+    actionContinue.disabled = true;
+    showStep('action');
+  }
+
+  function escapeHtml(s){
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ---------- confirm / timer ----------
+  document.getElementById('confirmBack').addEventListener('click', function(){
+    showStep('action');
+  });
+  document.getElementById('confirmStart').addEventListener('click', function(){
+    ensureAudio(); // must happen on a user gesture
+    startTimer(Date.now() + CYCLE_SECONDS * 1000);
+  });
+
+  var clockDisplay = document.getElementById('clockDisplay');
+  var ringFg = document.getElementById('ringFg');
+
+  function startTimer(endsAt){
+    state.timerEndsAt = endsAt;
+    localStorage.setItem(LS_ENDS_AT, String(endsAt));
+    document.getElementById('timerTaskLine').textContent = 'Working on: ' + state.task;
+    rotateOwlMessage();
+    showStep('timer');
+    tick();
+    if (state.tickHandle) clearInterval(state.tickHandle);
+    state.tickHandle = setInterval(tick, 500);
+  }
+
+  function tick(){
+    var remaining = Math.max(0, state.timerEndsAt - Date.now());
+    var secs = Math.ceil(remaining / 1000);
+    var mm = Math.floor(secs / 60);
+    var ss = secs % 60;
+    clockDisplay.textContent = (mm < 10 ? '0'+mm : mm) + ':' + (ss < 10 ? '0'+ss : ss);
+    var fraction = 1 - (remaining / (CYCLE_SECONDS * 1000));
+    ringFg.setAttribute('stroke-dashoffset', String(RING_CIRC * fraction));
+    if (remaining <= 0){
+      clearInterval(state.tickHandle);
+      completeCycle();
+    }
+  }
+
+  function completeCycle(){
+    localStorage.removeItem(LS_ENDS_AT);
+    playBell();
+    setTotalCycles(totalCycles() + 1);
+    renderOwl();
+    showStep('cycledone');
+  }
+
+  document.getElementById('cycleContinue').addEventListener('click', function(){
+    goToActionStep(false);
+  });
+  document.getElementById('cycleNewTask').addEventListener('click', function(){
+    localStorage.removeItem(LS_TASK);
+    localStorage.removeItem(LS_ACTION);
+    state.task = ''; state.action = '';
+    taskInput.value = '';
+    taskContinue.disabled = true;
+    showStep('task');
+  });
+
+  // ---------- reset (testing only) ----------
+  document.getElementById('resetOwl').addEventListener('click', function(){
+    if (confirm('Reset the owl back to an egg? (testing only)')){
+      localStorage.removeItem(LS_TOTAL);
+      renderOwl();
+    }
+  });
+
+  // ---------- intro modal ----------
+  var introModal = document.getElementById('introModal');
+  if (localStorage.getItem(LS_INTRO_SEEN)) introModal.classList.add('hidden');
+  document.getElementById('introDismiss').addEventListener('click', function(){
+    localStorage.setItem(LS_INTRO_SEEN, '1');
+    introModal.classList.add('hidden');
+  });
+
+  // ---------- boot / resume ----------
+  function boot(){
+    renderOwl();
+    rotateOwlMessage();
+
+    var storedEndsAt = parseInt(localStorage.getItem(LS_ENDS_AT) || '0', 10);
+    var storedTask = localStorage.getItem(LS_TASK) || '';
+    var storedAction = localStorage.getItem(LS_ACTION) || '';
+
+    if (storedEndsAt && storedTask){
+      state.task = storedTask;
+      state.action = storedAction;
+      if (storedEndsAt > Date.now()){
+        ensureAudio();
+        startTimer(storedEndsAt);
+        return;
+      } else {
+        // they were away past the end time — credit the round, welcome them back
+        localStorage.removeItem(LS_ENDS_AT);
+        setTotalCycles(totalCycles() + 1);
+        renderOwl();
+        goToActionStep(false);
+        return;
+      }
+    }
+    if (storedTask){
+      state.task = storedTask;
+      goToActionStep(true);
+      return;
+    }
+    showStep('task');
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
