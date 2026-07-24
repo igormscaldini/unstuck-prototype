@@ -107,7 +107,7 @@
 
   .completed-log{
     font-size:13px;color:var(--ct-text-mid);background:var(--ct-grey-bg);
-    border-radius:10px;padding:10px 14px;margin-bottom:18px;
+    border-radius:10px;padding:10px 14px;margin-top:22px;
   }
   .completed-log-title{
     font-size:11px;font-weight:600;color:var(--ct-text-light);
@@ -280,7 +280,6 @@
       <!-- STEP: ACTION -->
       <div class="step" id="step-action">
         <div class="task-recap" id="actionTaskRecap"></div>
-        <div class="completed-log" id="completedLog" style="display:none;"></div>
         <h1 class="step-title" id="actionTitle">What's something you could do in the next 10 minutes about this?</h1>
         <p class="step-help">Keep it small. It just needs to move things forward a little.</p>
         <textarea id="actionInput" placeholder="e.g. Open the doc and write a rough outline..."></textarea>
@@ -293,6 +292,7 @@
           <button class="btn btn-primary" id="actionContinue" disabled>Continue →</button>
           <button class="link-btn" id="actionBack">← back</button>
         </div>
+        <div class="completed-log" id="completedLog" style="display:none;"></div>
       </div>
 
       <!-- STEP: CONFIRM -->
