@@ -309,6 +309,9 @@
           </div>
         </div>
         <p class="fine-print" id="timerTaskLine"></p>
+        <div class="btn-row" style="justify-content:center;margin-top:10px;">
+          <button class="restart-btn" id="finishedEarly">I've finished this task</button>
+        </div>
       </div>
 
       <!-- STEP: CYCLE DONE (brief, then auto-advances to action step) -->
@@ -602,18 +605,22 @@
     var fraction = 1 - (remaining / (CYCLE_SECONDS * 1000));
     ringFg.setAttribute('stroke-dashoffset', String(RING_CIRC * fraction));
     if (remaining <= 0){
-      clearInterval(state.tickHandle);
       completeCycle();
     }
   }
 
   function completeCycle(){
+    if (state.tickHandle) clearInterval(state.tickHandle);
     localStorage.removeItem(LS_ENDS_AT);
     playBell();
     setTotalCycles(totalCycles() + 1);
     renderOwl();
     showStep('cycledone');
   }
+
+  document.getElementById('finishedEarly').addEventListener('click', function(){
+    completeCycle();
+  });
 
   document.getElementById('cycleContinue').addEventListener('click', function(){
     goToActionStep(false);
