@@ -67,11 +67,19 @@
     position:sticky;
     top:24px;
   }
-  .owl-card .owl-svg-holder{width:150px;margin:6px auto 14px;}
+  .owl-card .owl-svg-holder{width:150px;margin:6px auto 4px;animation:gentle-bob 3.2s ease-in-out infinite;}
   .owl-card .owl-svg-holder svg{width:100%;height:auto;display:block;}
+  @keyframes gentle-bob{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-5px);}
+  }
   .owl-stage-label{
     font-size:12px;font-weight:600;color:var(--ct-text-light);
-    text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;
+  }
+  .owl-stage-caption{
+    font-size:13px;color:var(--ct-dark);font-weight:500;
+    margin-bottom:14px;min-height:18px;
   }
   .owl-message{
     font-size:15px;color:var(--ct-dark);
@@ -125,6 +133,21 @@
   }
   .chip:hover{background:#e8f3ff;}
   .not-sure-label{font-size:13px;color:var(--ct-text-light);margin:16px 0 0;}
+
+  .ai-suggest-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:inherit;font-size:14px;font-weight:600;
+    padding:10px 18px;margin-top:10px;
+    border-radius:100px;border:1.5px solid var(--ct-gold);
+    background:#fffaf0;color:#8a6d00;cursor:pointer;
+    transition:.15s;
+  }
+  .ai-suggest-btn:hover:not(:disabled){background:#fef2d1;}
+  .ai-suggest-btn:disabled{opacity:.6;cursor:default;}
+  .ai-suggest-btn .spark{font-size:15px;}
+  .ai-suggest-note{font-size:13px;color:#8a5a00;background:#fff8e8;border:1px solid #fbe3a8;
+    border-radius:10px;padding:11px 14px;margin-top:12px;}
+  .ai-error-note{font-size:13px;color:#a33;margin-top:10px;}
 
   .btn-row{display:flex;align-items:center;gap:14px;margin-top:26px;}
   .btn{
@@ -241,8 +264,11 @@
         <h1 class="step-title" id="actionTitle">What's something you could do in the next 10 minutes about this?</h1>
         <p class="step-help">Keep it small. It just needs to move things forward a little.</p>
         <textarea id="actionInput" placeholder="e.g. Open the doc and write a rough outline..."></textarea>
-        <div class="not-sure-label">Not sure? Pick one:</div>
-        <div class="chips" id="actionChips"></div>
+        <div>
+          <button type="button" class="ai-suggest-btn" id="aiSuggestBtn"><span class="spark">✨</span> Suggest me with AI</button>
+        </div>
+        <div class="ai-suggest-note" id="tooBroadNotice" style="display:none;"></div>
+        <div class="ai-error-note" id="aiErrorNote" style="display:none;"></div>
         <div class="btn-row">
           <button class="btn btn-primary" id="actionContinue" disabled>Continue →</button>
           <button class="link-btn" id="actionBack">← back</button>
@@ -294,6 +320,7 @@
     <div class="owl-card">
       <div class="owl-svg-holder" id="owlSvgHolder"></div>
       <div class="owl-stage-label" id="owlStageLabel">Egg</div>
+      <div class="owl-stage-caption" id="owlStageCaption"></div>
       <div class="owl-message" id="owlMessage"></div>
       <div class="owl-progress" id="owlProgress"></div>
     </div>
@@ -315,15 +342,12 @@
   var FAST = params.get('fast') === '1';
   var CYCLE_SECONDS = FAST ? 20 : 600; // 20s in ?fast=1 mode for quick team testing, else 10 min
   var RING_CIRC = 502.4;
+  var SUGGEST_API_URL = 'https://unstuck-suggest-api.vercel.app/api/suggest';
+  var SUGGEST_PROTO_TOKEN = 'Vb2jxJSOSr2RwZxEy12jgJhECuYnzVsm';
 
   var TASK_PRESETS = [
     "A work task", "A chore or errand", "A hard conversation",
     "Something creative", "Studying / a course", "Admin or paperwork"
-  ];
-  var ACTION_PRESETS = [
-    "Open it and just look at it", "Do the smallest possible piece",
-    "List the first 3 steps", "Set up my workspace",
-    "Send one message about it", "Just sit with it for 2 minutes"
   ];
   var MESSAGES = [
     "Dealing with procrastination can be genuinely challenging — and you're capable of doing this anyway. Take a deep breath and go for it.",
@@ -334,6 +358,13 @@
   ];
 
   var OWL_STAGES = ["Egg", "Cracking", "Hatchling", "Fledgling", "Full owl"];
+  var OWL_CAPTIONS = [
+    "Finish one round and see what hatches 🐣",
+    "It's starting to crack — one more round to go.",
+    "It hatched! Keep going and watch it grow.",
+    "Almost fully grown.",
+    "Fully grown — thanks for showing up today."
+  ];
   var MAX_STAGE = OWL_STAGES.length - 1;
 
   // ---------- state ----------
@@ -398,6 +429,7 @@
     var idx = currentStageIndex();
     document.getElementById('owlSvgHolder').innerHTML = OWL_SVGS[idx];
     document.getElementById('owlStageLabel').textContent = OWL_STAGES[idx];
+    document.getElementById('owlStageCaption').textContent = OWL_CAPTIONS[idx];
     var prog = document.getElementById('owlProgress');
     prog.innerHTML = '';
     for (var i = 0; i <= MAX_STAGE; i++){
@@ -460,10 +492,50 @@
   actionInput.addEventListener('input', function(){
     actionContinue.disabled = actionInput.value.trim().length === 0;
   });
-  buildChips(document.getElementById('actionChips'), ACTION_PRESETS, actionInput, function(){
-    actionContinue.disabled = false;
+
+  // ---------- AI suggestion button ----------
+  var aiSuggestBtn = document.getElementById('aiSuggestBtn');
+  var tooBroadNotice = document.getElementById('tooBroadNotice');
+  var aiErrorNote = document.getElementById('aiErrorNote');
+
+  function resetAiNotices(){
+    tooBroadNotice.style.display = 'none';
+    aiErrorNote.style.display = 'none';
+  }
+
+  aiSuggestBtn.addEventListener('click', function(){
+    resetAiNotices();
+    aiSuggestBtn.disabled = true;
+    aiSuggestBtn.innerHTML = '<span class="spark">✨</span> Thinking…';
+    fetch(SUGGEST_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Proto-Token': SUGGEST_PROTO_TOKEN },
+      body: JSON.stringify({ task: state.task })
+    })
+      .then(function(r){
+        if (!r.ok) return r.json().then(function(d){ throw new Error(d.error || ('HTTP ' + r.status)); });
+        return r.json();
+      })
+      .then(function(data){
+        actionInput.value = data.suggestion || '';
+        actionInput.dispatchEvent(new Event('input'));
+        if (data.tooBroad){
+          tooBroadNotice.textContent = "Your input was too broad, but I tried my best shot. If you want to be more specific, click the back button and describe it more.";
+          tooBroadNotice.style.display = 'block';
+        }
+      })
+      .catch(function(err){
+        aiErrorNote.textContent = "Couldn't get a suggestion (" + err.message + ") — feel free to just describe it yourself.";
+        aiErrorNote.style.display = 'block';
+      })
+      .finally(function(){
+        aiSuggestBtn.disabled = false;
+        aiSuggestBtn.innerHTML = '<span class="spark">✨</span> Suggest me with AI';
+      });
   });
+
   document.getElementById('actionBack').addEventListener('click', function(){
+    resetAiNotices();
     showStep('task');
   });
   actionContinue.addEventListener('click', function(){
@@ -481,6 +553,7 @@
       : "What's the next easy thing you can do in 10 minutes?";
     actionInput.value = '';
     actionContinue.disabled = true;
+    resetAiNotices();
     showStep('action');
   }
 
