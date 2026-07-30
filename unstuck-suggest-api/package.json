@@ -1,0 +1,9 @@
+{
+  "name": "unstuck-suggest-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless proxy holding ANTHROPIC_API_KEY server-side for the Unstuck prototype's AI-suggestion button.",
+  "engines": {
+    "node": ">=18"
+  }
+}

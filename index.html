@@ -145,7 +145,9 @@
     transition:.15s;
   }
   .chip:hover{background:#e8f3ff;}
+  .chip.selected{background:var(--ct-blue);color:#fff;}
   .not-sure-label{font-size:13px;color:var(--ct-text-light);margin:16px 0 0;}
+  .technique-source{font-size:12.5px;color:var(--ct-text-light);font-style:italic;margin-top:10px;}
 
   .ai-suggest-btn{
     display:inline-flex;align-items:center;gap:8px;
@@ -249,7 +251,7 @@
 <div class="modal-overlay" id="introModal">
   <div class="modal">
     <h2>🦉 Welcome to Unstuck</h2>
-    <p>A Clearer Thinking prototype. When you're stuck procrastinating on something, this tool gets you moving in three quick steps: name the task, name one small thing you could do in the next 10 minutes, then start a timer and go do it.</p>
+    <p>A Clearer Thinking prototype. When you're stuck procrastinating on something, this tool gets you moving: first a quick one-minute technique matched to what's holding you back, then name the task, name one small thing you could do in the next 10 minutes, and start a timer and go do it.</p>
     <p>No account, no judgment — just come back when the timer's done and do it again. An owl keeps you company and grows a little each round.</p>
     <button class="btn btn-primary" id="introDismiss">Let's go</button>
   </div>
@@ -264,6 +266,34 @@
 
   <div class="layout">
     <div class="card">
+
+      <!-- STEP: CAUSE -->
+      <div class="step" id="step-cause">
+        <h1 class="step-title">What's probably behind this moment of procrastination?</h1>
+        <p class="step-help">Research points to a few common causes. Pick whichever feels closest right now — you can pick differently next round.</p>
+        <div class="chips" id="causeChips"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="causeContinue" disabled>Continue →</button>
+          <button class="link-btn" id="causeSkip">Skip, just let me dive in →</button>
+        </div>
+      </div>
+
+      <!-- STEP: TECHNIQUE -->
+      <div class="step" id="step-technique">
+        <h1 class="step-title" id="techniqueTitle"></h1>
+        <p class="step-help">Try this for about a minute before naming your task — a small, research-backed reset.</p>
+        <div class="task-recap" id="techniqueText"></div>
+        <div class="technique-source" id="techniqueSource"></div>
+        <div style="margin-top:16px;">
+          <textarea id="techniqueContext" style="min-height:54px;" placeholder="Optional: in a sentence, what's making it hard to start right now?"></textarea>
+          <button type="button" class="ai-suggest-btn" id="aiTechniqueBtn"><span class="spark">✨</span> Personalize with AI</button>
+        </div>
+        <div class="ai-error-note" id="techniqueAiError" style="display:none;"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="techniqueContinue">Okay, I'm ready →</button>
+          <button class="link-btn" id="techniqueBack">← back</button>
+        </div>
+      </div>
 
       <!-- STEP: TASK -->
       <div class="step" id="step-task">
@@ -367,11 +397,50 @@
   var CYCLE_SECONDS = FAST ? 20 : 600; // 20s in ?fast=1 mode for quick team testing, else 10 min
   var RING_CIRC = 502.4;
   var SUGGEST_API_URL = 'https://unstuck-suggest-api.vercel.app/api/suggest';
+  var TECHNIQUE_API_URL = 'https://unstuck-suggest-api.vercel.app/api/technique';
   var SUGGEST_PROTO_TOKEN = 'Vb2jxJSOSr2RwZxEy12jgJhECuYnzVsm';
 
   var TASK_PRESETS = [
     "A work task", "A chore or errand", "A hard conversation",
     "Something creative", "Studying / a course", "Admin or paperwork"
+  ];
+
+  var CAUSES = [
+    {
+      key: 'fear',
+      label: 'Fear of messing up',
+      title: 'Fear of failure',
+      technique: "Name what you're feeling in a few words — e.g. “this feels like fear of messing up.” Remind yourself that's a thought, not a fact, and you can set it down any time. Take one slow breath, then start.",
+      source: "Adapted from the R.A.I.N. method (Salzberg, 2017) and research linking mindfulness to lower procrastination (Schutte & del Pozo de Bolger, 2020)."
+    },
+    {
+      key: 'motivation',
+      label: "Can't feel motivated",
+      title: 'Lack of motivation',
+      technique: "Picture for a few seconds how good it'll feel once this is done. Now name the smallest possible next step — something almost too easy to say no to. Do just that.",
+      source: "Adapted from milestone-setting techniques and research on temporal discounting (Green & Myerson, 2004; Steel et al., 2018)."
+    },
+    {
+      key: 'fatigue',
+      label: 'Too tired to start',
+      title: 'Mental fatigue',
+      technique: "Stand up, stretch for 20 seconds, and take 5 slow breaths or drink some water. Fatigue makes tasks feel harder than they are — a quick physical reset takes the edge off before you begin.",
+      source: "Informed by research on mental fatigue and procrastination (Kachgal, Hansen, & Nutter, 2001) and the ego-depletion literature."
+    },
+    {
+      key: 'distraction',
+      label: "Can't stay focused",
+      title: 'Distractions',
+      technique: "Remove one likely distraction before you start — silence your phone, close extra tabs, or put your phone in another room. Precommit like Odysseus: make it hard for future-you to get pulled away.",
+      source: "Adapted from research on attention residue (Leroy, 2009) and precommitment strategies for managing distraction."
+    },
+    {
+      key: 'unsure',
+      label: "Not sure — a bit of everything",
+      title: 'A bit of everything',
+      technique: "Take one slow breath. Remove the nearest distraction. Then name the smallest possible next step you could take — and just do that.",
+      source: "A blend of the techniques above — mindfulness, precommitment, and milestone-setting all help, even when it's hard to pin down just one cause."
+    }
   ];
   var MESSAGES = [
     "Dealing with procrastination can be genuinely challenging — and you're capable of doing this anyway. Take a deep breath and go for it.",
@@ -442,7 +511,7 @@
   function currentStageIndex(){ return Math.min(totalCycles(), MAX_STAGE); }
 
   // ---------- steps ----------
-  var steps = ['task','action','confirm','timer','cycledone'];
+  var steps = ['cause','technique','task','action','confirm','timer','cycledone'];
   function showStep(name){
     steps.forEach(function(s){
       document.getElementById('step-'+s).classList.toggle('active', s === name);
@@ -530,6 +599,92 @@
       osc.stop(now + 2.7);
     });
   }
+
+  // ---------- cause/technique steps ----------
+  var causeChipsContainer = document.getElementById('causeChips');
+  var causeContinue = document.getElementById('causeContinue');
+  var selectedCauseKey = null;
+
+  function findCause(key){
+    var found = null;
+    CAUSES.forEach(function(c){ if (c.key === key) found = c; });
+    return found || CAUSES[CAUSES.length - 1];
+  }
+
+  function resetCauseChips(){
+    selectedCauseKey = null;
+    causeContinue.disabled = true;
+    Array.prototype.forEach.call(causeChipsContainer.children, function(ch){
+      ch.classList.remove('selected');
+    });
+  }
+
+  causeChipsContainer.innerHTML = '';
+  CAUSES.forEach(function(c){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';
+    b.textContent = c.label;
+    b.addEventListener('click', function(){
+      selectedCauseKey = c.key;
+      Array.prototype.forEach.call(causeChipsContainer.children, function(ch){ ch.classList.remove('selected'); });
+      b.classList.add('selected');
+      causeContinue.disabled = false;
+    });
+    causeChipsContainer.appendChild(b);
+  });
+
+  var techniqueContext = document.getElementById('techniqueContext');
+  var techniqueAiError = document.getElementById('techniqueAiError');
+  var aiTechniqueBtn = document.getElementById('aiTechniqueBtn');
+
+  function goToTechniqueStep(){
+    var cause = findCause(selectedCauseKey);
+    document.getElementById('techniqueTitle').textContent = cause.title + ': a one-minute technique';
+    document.getElementById('techniqueText').textContent = cause.technique;
+    document.getElementById('techniqueSource').textContent = cause.source;
+    techniqueContext.value = '';
+    techniqueAiError.style.display = 'none';
+    showStep('technique');
+  }
+
+  causeContinue.addEventListener('click', goToTechniqueStep);
+  document.getElementById('causeSkip').addEventListener('click', function(){
+    showStep('task');
+  });
+  document.getElementById('techniqueBack').addEventListener('click', function(){
+    showStep('cause');
+  });
+  document.getElementById('techniqueContinue').addEventListener('click', function(){
+    showStep('task');
+  });
+
+  aiTechniqueBtn.addEventListener('click', function(){
+    techniqueAiError.style.display = 'none';
+    aiTechniqueBtn.disabled = true;
+    aiTechniqueBtn.innerHTML = '<span class="spark">✨</span> Thinking…';
+    var cause = findCause(selectedCauseKey);
+    fetch(TECHNIQUE_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Proto-Token': SUGGEST_PROTO_TOKEN },
+      body: JSON.stringify({ cause: cause.key, context: techniqueContext.value.trim() })
+    })
+      .then(function(r){
+        if (!r.ok) return r.json().then(function(d){ throw new Error(d.error || ('HTTP ' + r.status)); });
+        return r.json();
+      })
+      .then(function(data){
+        if (data.technique) document.getElementById('techniqueText').textContent = data.technique;
+      })
+      .catch(function(err){
+        techniqueAiError.textContent = "Couldn't personalize (" + err.message + ") — the technique above still works.";
+        techniqueAiError.style.display = 'block';
+      })
+      .finally(function(){
+        aiTechniqueBtn.disabled = false;
+        aiTechniqueBtn.innerHTML = '<span class="spark">✨</span> Personalize with AI';
+      });
+  });
 
   // ---------- task/action steps ----------
   var taskInput = document.getElementById('taskInput');
@@ -687,7 +842,8 @@
     clearHistory();
     taskInput.value = '';
     taskContinue.disabled = true;
-    showStep('task');
+    resetCauseChips();
+    showStep('cause');
   });
 
   // ---------- restart everything ----------
@@ -735,7 +891,7 @@
       goToActionStep(true);
       return;
     }
-    showStep('task');
+    showStep('cause');
   }
 
   boot();
