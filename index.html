@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Unstuck — a Clearer Thinking prototype</title>
 <meta name="description" content="A 10-minute momentum tool to help you break a procrastination moment. Clearer Thinking prototype.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHBhdGggZD0iTTMyIDYgQzIwIDYgMTAgMzAgMTAgNDIgQzEwIDU0IDIwIDYwIDMyIDYwIEM0NCA2MCA1NCA1NCA1NCA0MiBDNTQgMzAgNDQgNiAzMiA2IFoiIGZpbGw9IiNmOWYxZTMiIHN0cm9rZT0iIzIzM2I0NyIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTIwIDI2IEwzMCAzOCBMMjIgNDQgTDM0IDU4IiBmaWxsPSJub25lIiBzdHJva2U9IiMwODg1ZjgiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+Cg==">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -147,7 +148,27 @@
   .chip:hover{background:#e8f3ff;}
   .chip.selected{background:var(--ct-blue);color:#fff;}
   .not-sure-label{font-size:13px;color:var(--ct-text-light);margin:16px 0 0;}
-  .technique-source{font-size:12.5px;color:var(--ct-text-light);font-style:italic;margin-top:10px;}
+
+  .cause-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 4px;}
+  @media (max-width:480px){.cause-grid{grid-template-columns:1fr;}}
+  .cause-card{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    padding:22px 14px;
+    border-radius:16px;
+    border:1.5px solid #e2e2e2;
+    background:#fff;
+    cursor:pointer;
+    font-family:inherit;
+    text-align:center;
+    transition:.15s;
+  }
+  .cause-card:hover{border-color:var(--ct-blue);background:#f5faff;box-shadow:0 4px 14px rgba(8,133,248,.1);}
+  .cause-card:active{transform:scale(.97);}
+  .cause-card .cause-icon{width:52px;height:52px;display:block;}
+  .cause-card .cause-icon svg{width:100%;height:100%;display:block;}
+  .cause-card .cause-label{font-size:14px;font-weight:600;color:var(--ct-dark);line-height:1.3;}
+  .cause-card-wide{grid-column:1 / -1;flex-direction:row;padding:16px 14px;}
+  .cause-card-wide .cause-icon{width:36px;height:36px;}
 
   .ai-suggest-btn{
     display:inline-flex;align-items:center;gap:8px;
@@ -271,27 +292,124 @@
       <div class="step" id="step-cause">
         <h1 class="step-title">What's probably behind this moment of procrastination?</h1>
         <p class="step-help">Research points to a few common causes. Pick whichever feels closest right now — you can pick differently next round.</p>
-        <div class="chips" id="causeChips"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="causeContinue" disabled>Continue →</button>
-          <button class="link-btn" id="causeSkip">Skip, just let me dive in →</button>
+        <div class="cause-grid" id="causeGrid"></div>
+      </div>
+
+      <!-- STEP: TECHNIQUE — FEAR OF FAILURE (interactive R.A.I.N.-style flow) -->
+      <div class="step" id="step-technique-fear">
+        <h1 class="step-title">Fear of failure: a one-minute technique</h1>
+
+        <div id="fearStage1">
+          <p class="step-help">Name what you're feeling in a few words.</p>
+          <input type="text" id="fearFeelingInput" placeholder="e.g. fear of messing this up...">
+          <div class="btn-row">
+            <button class="btn btn-primary" id="fearStage1Continue" disabled>Continue →</button>
+            <button class="link-btn" id="fearStage1Back">← choose a different cause</button>
+          </div>
+        </div>
+
+        <div id="fearStage2" style="display:none;">
+          <div class="task-recap" id="fearFeelingRecap"></div>
+          <p class="step-help" style="margin-top:16px;">Is that a fact about what's going to happen — or a thought passing through your mind?</p>
+          <div class="chips" id="fearFactThoughtChips">
+            <button type="button" class="chip" data-choice="fact">It feels like a fact</button>
+            <button type="button" class="chip" data-choice="thought">It's just a thought</button>
+          </div>
+          <div class="ai-suggest-note" id="fearReflectionNote" style="display:none;"></div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="fearStage2Continue" disabled>Okay, I'm ready →</button>
+            <button class="link-btn" id="fearStage2Back">← back</button>
+          </div>
+        </div>
+
+        <div id="fearStage3" style="display:none;">
+          <div class="timer-display">
+            <div class="step-title" style="font-size:19px;" id="fearBreatheMsg">Take one slow breath.</div>
+            <div class="clock" id="fearBreatheClock">10</div>
+          </div>
+          <div class="btn-row" id="fearNextRow" style="display:none;justify-content:center;">
+            <button class="btn btn-primary" id="fearNextBtn">Next →</button>
+          </div>
         </div>
       </div>
 
-      <!-- STEP: TECHNIQUE -->
-      <div class="step" id="step-technique">
-        <h1 class="step-title" id="techniqueTitle"></h1>
-        <p class="step-help">Try this for about a minute before naming your task — a small, research-backed reset.</p>
-        <div class="task-recap" id="techniqueText"></div>
-        <div class="technique-source" id="techniqueSource"></div>
-        <div style="margin-top:16px;">
-          <textarea id="techniqueContext" style="min-height:54px;" placeholder="Optional: in a sentence, what's making it hard to start right now?"></textarea>
-          <button type="button" class="ai-suggest-btn" id="aiTechniqueBtn"><span class="spark">✨</span> Personalize with AI</button>
+      <!-- STEP: TECHNIQUE — LACK OF MOTIVATION (interactive rating + reflection) -->
+      <div class="step" id="step-technique-motivation">
+        <h1 class="step-title">Lack of motivation: a one-minute technique</h1>
+
+        <div id="motivationStage1">
+          <p class="step-help">Picture for a few seconds how good it'll feel once this is done.</p>
+          <label style="font-size:14px;color:var(--ct-text-mid);display:block;margin:14px 0 8px;">From 1 to 10, how good would you feel about yourself about advancing or finishing this task?</label>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <input type="range" id="motivationRating" min="1" max="10" value="5" style="flex:1;accent-color:var(--ct-blue);">
+            <span id="motivationRatingValue" style="font-weight:700;color:var(--ct-blue);font-size:20px;min-width:26px;text-align:center;">5</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="motivationStage1Continue">Continue →</button>
+            <button class="link-btn" id="motivationStage1Back">← choose a different cause</button>
+          </div>
         </div>
-        <div class="ai-error-note" id="techniqueAiError" style="display:none;"></div>
+
+        <div id="motivationStage2" style="display:none;">
+          <p class="step-help">Do you think it's worth the small time investment to make a little progress on it?</p>
+          <div class="chips" id="motivationWorthChips">
+            <button type="button" class="chip" data-choice="yes">Yes, worth it</button>
+            <button type="button" class="chip" data-choice="no">Not really sure</button>
+          </div>
+          <div class="ai-suggest-note" id="motivationReflectionNote" style="display:none;"></div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="motivationStage2Continue" disabled>Okay, I'm ready →</button>
+            <button class="link-btn" id="motivationStage2Back">← back</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP: TECHNIQUE — MENTAL FATIGUE (sequential physical-reset timers) -->
+      <div class="step" id="step-technique-fatigue">
+        <h1 class="step-title">Mental fatigue: a one-minute technique</h1>
+
+        <div id="fatigueTimerStage">
+          <div class="timer-display">
+            <div class="step-title" style="font-size:19px;" id="fatigueMsg"></div>
+            <div class="clock" id="fatigueClock"></div>
+          </div>
+          <div class="btn-row" id="fatigueNextRow" style="display:none;justify-content:center;">
+            <button class="btn btn-primary" id="fatigueNextBtn">Next →</button>
+          </div>
+        </div>
+
+        <div id="fatigueQuestionStage" style="display:none;">
+          <p class="step-help">Are you feeling better and more prone to take this task? No worries, we'll start small either way.</p>
+          <div class="chips" id="fatigueFeelChips">
+            <button type="button" class="chip" data-choice="better">Yeah, a bit better</button>
+            <button type="button" class="chip" data-choice="same">Not really, but let's try</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP: TECHNIQUE — DISTRACTIONS (precommitment checklist + timer) -->
+      <div class="step" id="step-technique-distraction">
+        <h1 class="step-title">Distractions: a one-minute technique</h1>
+        <p class="step-help">Precommit like Odysseus — clear the pulls on your attention before you start.</p>
+        <div class="timer-display" style="padding:4px 0 10px;">
+          <div class="clock" id="distractionClock" style="font-size:44px;"></div>
+        </div>
+        <div class="task-recap" style="text-align:left;">
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;cursor:pointer;">
+            <input type="checkbox" id="distractionCheck1" style="margin-top:3px;width:18px;height:18px;flex:none;">
+            <span>Put your phone in another room.</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;cursor:pointer;">
+            <input type="checkbox" id="distractionCheck2" style="margin-top:3px;width:18px;height:18px;flex:none;">
+            <span>Close extra tabs.</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="distractionCheck3" style="margin-top:3px;width:18px;height:18px;flex:none;">
+            <span>If applicable, tell people you'll be off the couch for 5 minutes.</span>
+          </label>
+        </div>
         <div class="btn-row">
-          <button class="btn btn-primary" id="techniqueContinue">Okay, I'm ready →</button>
-          <button class="link-btn" id="techniqueBack">← back</button>
+          <button class="btn btn-primary" id="distractionNextBtn" disabled>Next →</button>
         </div>
       </div>
 
@@ -397,7 +515,6 @@
   var CYCLE_SECONDS = FAST ? 20 : 600; // 20s in ?fast=1 mode for quick team testing, else 10 min
   var RING_CIRC = 502.4;
   var SUGGEST_API_URL = 'https://unstuck-suggest-api.vercel.app/api/suggest';
-  var TECHNIQUE_API_URL = 'https://unstuck-suggest-api.vercel.app/api/technique';
   var SUGGEST_PROTO_TOKEN = 'Vb2jxJSOSr2RwZxEy12jgJhECuYnzVsm';
 
   var TASK_PRESETS = [
@@ -409,37 +526,27 @@
     {
       key: 'fear',
       label: 'Fear of messing up',
-      title: 'Fear of failure',
-      technique: "Name what you're feeling in a few words — e.g. “this feels like fear of messing up.” Remind yourself that's a thought, not a fact, and you can set it down any time. Take one slow breath, then start.",
-      source: "Adapted from the R.A.I.N. method (Salzberg, 2017) and research linking mindfulness to lower procrastination (Schutte & del Pozo de Bolger, 2020)."
+      icon: '<svg viewBox="0 0 64 64"><path d="M32 6 L54 14 V30 C54 46 44 56 32 60 C20 56 10 46 10 30 V14 Z" fill="none" stroke="#233b47" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M33 18 L26 34 L34 34 L27 50" fill="none" stroke="#0885f8" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg>'
     },
     {
       key: 'motivation',
       label: "Can't feel motivated",
-      title: 'Lack of motivation',
-      technique: "Picture for a few seconds how good it'll feel once this is done. Now name the smallest possible next step — something almost too easy to say no to. Do just that.",
-      source: "Adapted from milestone-setting techniques and research on temporal discounting (Green & Myerson, 2004; Steel et al., 2018)."
+      icon: '<svg viewBox="0 0 64 64"><rect x="7" y="20" width="44" height="24" rx="6" fill="none" stroke="#233b47" stroke-width="4"/><rect x="53" y="27" width="6" height="10" rx="2" fill="#233b47"/><rect x="13" y="26" width="10" height="12" rx="2" fill="#0885f8"/></svg>'
     },
     {
       key: 'fatigue',
       label: 'Too tired to start',
-      title: 'Mental fatigue',
-      technique: "Stand up, stretch for 20 seconds, and take 5 slow breaths or drink some water. Fatigue makes tasks feel harder than they are — a quick physical reset takes the edge off before you begin.",
-      source: "Informed by research on mental fatigue and procrastination (Kachgal, Hansen, & Nutter, 2001) and the ego-depletion literature."
+      icon: '<svg viewBox="0 0 64 64"><path d="M13 26 H41 V40 a14 14 0 0 1 -14 14 H27 a14 14 0 0 1 -14 -14 Z" fill="none" stroke="#233b47" stroke-width="4" stroke-linejoin="round"/><path d="M41 30 H47 a8 8 0 0 1 0 16 H41" fill="none" stroke="#233b47" stroke-width="4"/><path d="M21 20 q-3 -5 0 -9" fill="none" stroke="#0885f8" stroke-width="3.5" stroke-linecap="round"/><path d="M31 20 q-3 -5 0 -9" fill="none" stroke="#0885f8" stroke-width="3.5" stroke-linecap="round"/></svg>'
     },
     {
       key: 'distraction',
       label: "Can't stay focused",
-      title: 'Distractions',
-      technique: "Remove one likely distraction before you start — silence your phone, close extra tabs, or put your phone in another room. Precommit like Odysseus: make it hard for future-you to get pulled away.",
-      source: "Adapted from research on attention residue (Leroy, 2009) and precommitment strategies for managing distraction."
+      icon: '<svg viewBox="0 0 64 64"><rect x="20" y="7" width="24" height="50" rx="6" fill="none" stroke="#233b47" stroke-width="4"/><line x1="28" y1="49" x2="36" y2="49" stroke="#233b47" stroke-width="4" stroke-linecap="round"/><circle cx="49" cy="15" r="4" fill="#0885f8"/><circle cx="13" cy="24" r="3" fill="#0885f8"/><circle cx="51" cy="34" r="2.5" fill="#0885f8"/></svg>'
     },
     {
       key: 'unsure',
       label: "Not sure — a bit of everything",
-      title: 'A bit of everything',
-      technique: "Take one slow breath. Remove the nearest distraction. Then name the smallest possible next step you could take — and just do that.",
-      source: "A blend of the techniques above — mindfulness, precommitment, and milestone-setting all help, even when it's hard to pin down just one cause."
+      icon: '<svg viewBox="0 0 64 64"><path d="M32 8 C20 8 12 20 12 32 C12 44 20 54 32 54 C44 54 52 44 52 32 C52 20 44 8 32 8 Z" fill="none" stroke="#233b47" stroke-width="4"/><path d="M26 24 a6 6 0 1 1 9 5 c-3 2 -3 4 -3 6" fill="none" stroke="#0885f8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="42" r="2.4" fill="#0885f8"/></svg>'
     }
   ];
   var MESSAGES = [
@@ -511,7 +618,7 @@
   function currentStageIndex(){ return Math.min(totalCycles(), MAX_STAGE); }
 
   // ---------- steps ----------
-  var steps = ['cause','technique','task','action','confirm','timer','cycledone'];
+  var steps = ['cause','technique-fear','technique-motivation','technique-fatigue','technique-distraction','task','action','confirm','timer','cycledone'];
   function showStep(name){
     steps.forEach(function(s){
       document.getElementById('step-'+s).classList.toggle('active', s === name);
@@ -600,90 +707,304 @@
     });
   }
 
-  // ---------- cause/technique steps ----------
-  var causeChipsContainer = document.getElementById('causeChips');
-  var causeContinue = document.getElementById('causeContinue');
-  var selectedCauseKey = null;
+  // ---------- cause step ----------
+  var causeGrid = document.getElementById('causeGrid');
 
-  function findCause(key){
-    var found = null;
-    CAUSES.forEach(function(c){ if (c.key === key) found = c; });
-    return found || CAUSES[CAUSES.length - 1];
-  }
-
-  function resetCauseChips(){
-    selectedCauseKey = null;
-    causeContinue.disabled = true;
-    Array.prototype.forEach.call(causeChipsContainer.children, function(ch){
-      ch.classList.remove('selected');
-    });
-  }
-
-  causeChipsContainer.innerHTML = '';
+  causeGrid.innerHTML = '';
   CAUSES.forEach(function(c){
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'chip';
-    b.textContent = c.label;
-    b.addEventListener('click', function(){
-      selectedCauseKey = c.key;
-      Array.prototype.forEach.call(causeChipsContainer.children, function(ch){ ch.classList.remove('selected'); });
-      b.classList.add('selected');
-      causeContinue.disabled = false;
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'cause-card' + (c.key === 'unsure' ? ' cause-card-wide' : '');
+    card.innerHTML = '<span class="cause-icon">' + c.icon + '</span><span class="cause-label">' + c.label + '</span>';
+    card.addEventListener('click', function(){
+      goToTechniqueStep(c);
     });
-    causeChipsContainer.appendChild(b);
+    causeGrid.appendChild(card);
   });
 
-  var techniqueContext = document.getElementById('techniqueContext');
-  var techniqueAiError = document.getElementById('techniqueAiError');
-  var aiTechniqueBtn = document.getElementById('aiTechniqueBtn');
-
-  function goToTechniqueStep(){
-    var cause = findCause(selectedCauseKey);
-    document.getElementById('techniqueTitle').textContent = cause.title + ': a one-minute technique';
-    document.getElementById('techniqueText').textContent = cause.technique;
-    document.getElementById('techniqueSource').textContent = cause.source;
-    techniqueContext.value = '';
-    techniqueAiError.style.display = 'none';
-    showStep('technique');
+  function goToTechniqueStep(cause){
+    if (cause.key === 'fear'){
+      resetFearFlow();
+      showStep('technique-fear');
+      return;
+    }
+    if (cause.key === 'motivation'){
+      resetMotivationFlow();
+      showStep('technique-motivation');
+      return;
+    }
+    if (cause.key === 'fatigue'){
+      resetFatigueFlow();
+      showStep('technique-fatigue');
+      return;
+    }
+    if (cause.key === 'distraction'){
+      resetDistractionFlow();
+      showStep('technique-distraction');
+      return;
+    }
+    showStep('task'); // 'unsure'
   }
 
-  causeContinue.addEventListener('click', goToTechniqueStep);
-  document.getElementById('causeSkip').addEventListener('click', function(){
-    showStep('task');
+  // ---------- fear-of-failure interactive flow (R.A.I.N.-style) ----------
+  var fearFeelingInput = document.getElementById('fearFeelingInput');
+  var fearStage1Continue = document.getElementById('fearStage1Continue');
+  var fearStage2Continue = document.getElementById('fearStage2Continue');
+  var fearFactThoughtChips = document.getElementById('fearFactThoughtChips');
+  var fearReflectionNote = document.getElementById('fearReflectionNote');
+  var fearBreatheClock = document.getElementById('fearBreatheClock');
+  var fearNextRow = document.getElementById('fearNextRow');
+  var fearChoice = null;
+  var fearCountdownHandle = null;
+  var BREATHE_SECONDS = 10;
+
+  function showFearStage(n){
+    [1, 2, 3].forEach(function(i){
+      document.getElementById('fearStage' + i).style.display = (i === n) ? 'block' : 'none';
+    });
+  }
+
+  function resetFearFlow(){
+    if (fearCountdownHandle){ clearInterval(fearCountdownHandle); fearCountdownHandle = null; }
+    fearFeelingInput.value = '';
+    fearStage1Continue.disabled = true;
+    fearChoice = null;
+    fearStage2Continue.disabled = true;
+    fearReflectionNote.style.display = 'none';
+    Array.prototype.forEach.call(fearFactThoughtChips.children, function(ch){ ch.classList.remove('selected'); });
+    fearBreatheClock.textContent = String(BREATHE_SECONDS);
+    fearNextRow.style.display = 'none';
+    showFearStage(1);
+  }
+
+  fearFeelingInput.addEventListener('input', function(){
+    fearStage1Continue.disabled = fearFeelingInput.value.trim().length === 0;
   });
-  document.getElementById('techniqueBack').addEventListener('click', function(){
+  fearFeelingInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !fearStage1Continue.disabled){
+      e.preventDefault();
+      fearStage1Continue.click();
+    }
+  });
+
+  fearStage1Continue.addEventListener('click', function(){
+    document.getElementById('fearFeelingRecap').innerHTML =
+      '<b>You wrote:</b> ' + escapeHtml(fearFeelingInput.value.trim());
+    showFearStage(2);
+  });
+  document.getElementById('fearStage1Back').addEventListener('click', function(){
     showStep('cause');
   });
-  document.getElementById('techniqueContinue').addEventListener('click', function(){
+
+  Array.prototype.forEach.call(fearFactThoughtChips.children, function(chip){
+    chip.addEventListener('click', function(){
+      fearChoice = chip.getAttribute('data-choice');
+      Array.prototype.forEach.call(fearFactThoughtChips.children, function(ch){ ch.classList.remove('selected'); });
+      chip.classList.add('selected');
+      fearReflectionNote.textContent = fearChoice === 'thought'
+        ? "Exactly — it's a thought, not a fact. You can notice it and set it down without needing it resolved."
+        : "It can really feel that way. But even feelings that feel like facts are usually thoughts we haven't questioned yet — not guaranteed outcomes. You can set it down anyway.";
+      fearReflectionNote.style.display = 'block';
+      fearStage2Continue.disabled = false;
+    });
+  });
+  document.getElementById('fearStage2Back').addEventListener('click', function(){
+    showFearStage(1);
+  });
+
+  fearStage2Continue.addEventListener('click', function(){
+    showFearStage(3);
+    var remaining = BREATHE_SECONDS;
+    fearBreatheClock.textContent = String(remaining);
+    fearNextRow.style.display = 'none';
+    if (fearCountdownHandle) clearInterval(fearCountdownHandle);
+    fearCountdownHandle = setInterval(function(){
+      remaining -= 1;
+      if (remaining <= 0){
+        clearInterval(fearCountdownHandle);
+        fearCountdownHandle = null;
+        fearBreatheClock.textContent = '0';
+        fearNextRow.style.display = 'flex';
+      } else {
+        fearBreatheClock.textContent = String(remaining);
+      }
+    }, 1000);
+  });
+
+  document.getElementById('fearNextBtn').addEventListener('click', function(){
     showStep('task');
   });
 
-  aiTechniqueBtn.addEventListener('click', function(){
-    techniqueAiError.style.display = 'none';
-    aiTechniqueBtn.disabled = true;
-    aiTechniqueBtn.innerHTML = '<span class="spark">✨</span> Thinking…';
-    var cause = findCause(selectedCauseKey);
-    fetch(TECHNIQUE_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Proto-Token': SUGGEST_PROTO_TOKEN },
-      body: JSON.stringify({ cause: cause.key, context: techniqueContext.value.trim() })
-    })
-      .then(function(r){
-        if (!r.ok) return r.json().then(function(d){ throw new Error(d.error || ('HTTP ' + r.status)); });
-        return r.json();
-      })
-      .then(function(data){
-        if (data.technique) document.getElementById('techniqueText').textContent = data.technique;
-      })
-      .catch(function(err){
-        techniqueAiError.textContent = "Couldn't personalize (" + err.message + ") — the technique above still works.";
-        techniqueAiError.style.display = 'block';
-      })
-      .finally(function(){
-        aiTechniqueBtn.disabled = false;
-        aiTechniqueBtn.innerHTML = '<span class="spark">✨</span> Personalize with AI';
-      });
+  // ---------- lack-of-motivation interactive flow ----------
+  var motivationRating = document.getElementById('motivationRating');
+  var motivationRatingValue = document.getElementById('motivationRatingValue');
+  var motivationStage1Continue = document.getElementById('motivationStage1Continue');
+  var motivationStage2Continue = document.getElementById('motivationStage2Continue');
+  var motivationWorthChips = document.getElementById('motivationWorthChips');
+  var motivationReflectionNote = document.getElementById('motivationReflectionNote');
+  var motivationWorthChoice = null;
+
+  function showMotivationStage(n){
+    [1, 2].forEach(function(i){
+      document.getElementById('motivationStage' + i).style.display = (i === n) ? 'block' : 'none';
+    });
+  }
+
+  function resetMotivationFlow(){
+    motivationRating.value = 5;
+    motivationRatingValue.textContent = '5';
+    motivationWorthChoice = null;
+    motivationStage2Continue.disabled = true;
+    motivationReflectionNote.style.display = 'none';
+    Array.prototype.forEach.call(motivationWorthChips.children, function(ch){ ch.classList.remove('selected'); });
+    showMotivationStage(1);
+  }
+
+  motivationRating.addEventListener('input', function(){
+    motivationRatingValue.textContent = motivationRating.value;
+  });
+
+  motivationStage1Continue.addEventListener('click', function(){
+    showMotivationStage(2);
+  });
+  document.getElementById('motivationStage1Back').addEventListener('click', function(){
+    showStep('cause');
+  });
+
+  Array.prototype.forEach.call(motivationWorthChips.children, function(chip){
+    chip.addEventListener('click', function(){
+      motivationWorthChoice = chip.getAttribute('data-choice');
+      Array.prototype.forEach.call(motivationWorthChips.children, function(ch){ ch.classList.remove('selected'); });
+      chip.classList.add('selected');
+      motivationReflectionNote.textContent = motivationWorthChoice === 'yes'
+        ? "Great — that's exactly the kind of small win that builds momentum. Let's use it."
+        : "That's okay — even a tiny bit of progress can shift how a task feels. It's usually worth one very small, low-effort step.";
+      motivationReflectionNote.style.display = 'block';
+      motivationStage2Continue.disabled = false;
+    });
+  });
+  document.getElementById('motivationStage2Back').addEventListener('click', function(){
+    showMotivationStage(1);
+  });
+  motivationStage2Continue.addEventListener('click', function(){
+    showStep('task');
+  });
+
+  // ---------- mental-fatigue interactive flow (sequential physical resets) ----------
+  var FATIGUE_STAGES = FAST
+    ? [
+        { seconds: 5, message: "Stand up, stretch for 60 seconds." },
+        { seconds: 3, message: "Take 5 deep breaths." },
+        { seconds: 5, message: "Drink some water." }
+      ]
+    : [
+        { seconds: 60, message: "Stand up, stretch for 60 seconds." },
+        { seconds: 30, message: "Take 5 deep breaths." },
+        { seconds: 60, message: "Drink some water." }
+      ];
+  var fatigueStageIndex = 0;
+  var fatigueCountdownHandle = null;
+  var fatigueMsgEl = document.getElementById('fatigueMsg');
+  var fatigueClockEl = document.getElementById('fatigueClock');
+  var fatigueNextRow = document.getElementById('fatigueNextRow');
+  var fatigueTimerStage = document.getElementById('fatigueTimerStage');
+  var fatigueQuestionStage = document.getElementById('fatigueQuestionStage');
+  var fatigueFeelChips = document.getElementById('fatigueFeelChips');
+
+  function runFatigueStage(i){
+    var stage = FATIGUE_STAGES[i];
+    fatigueMsgEl.textContent = stage.message;
+    fatigueNextRow.style.display = 'none';
+    var remaining = stage.seconds;
+    fatigueClockEl.textContent = String(remaining);
+    if (fatigueCountdownHandle) clearInterval(fatigueCountdownHandle);
+    fatigueCountdownHandle = setInterval(function(){
+      remaining -= 1;
+      if (remaining <= 0){
+        clearInterval(fatigueCountdownHandle);
+        fatigueCountdownHandle = null;
+        fatigueClockEl.textContent = '0';
+        fatigueNextRow.style.display = 'flex';
+      } else {
+        fatigueClockEl.textContent = String(remaining);
+      }
+    }, 1000);
+  }
+
+  function resetFatigueFlow(){
+    if (fatigueCountdownHandle){ clearInterval(fatigueCountdownHandle); fatigueCountdownHandle = null; }
+    fatigueStageIndex = 0;
+    fatigueTimerStage.style.display = 'block';
+    fatigueQuestionStage.style.display = 'none';
+    Array.prototype.forEach.call(fatigueFeelChips.children, function(ch){ ch.classList.remove('selected'); });
+    runFatigueStage(0);
+  }
+
+  document.getElementById('fatigueNextBtn').addEventListener('click', function(){
+    fatigueStageIndex += 1;
+    if (fatigueStageIndex < FATIGUE_STAGES.length){
+      runFatigueStage(fatigueStageIndex);
+    } else {
+      fatigueTimerStage.style.display = 'none';
+      fatigueQuestionStage.style.display = 'block';
+    }
+  });
+
+  Array.prototype.forEach.call(fatigueFeelChips.children, function(chip){
+    chip.addEventListener('click', function(){
+      showStep('task');
+    });
+  });
+
+  // ---------- distractions interactive flow (precommitment checklist + timer) ----------
+  var DISTRACTION_SECONDS = FAST ? 8 : 120;
+  var distractionRemaining = DISTRACTION_SECONDS;
+  var distractionCountdownHandle = null;
+  var distractionTimerDone = false;
+  var distractionClockEl = document.getElementById('distractionClock');
+  var distractionNextBtn = document.getElementById('distractionNextBtn');
+  var distractionCheck1 = document.getElementById('distractionCheck1');
+  var distractionCheck2 = document.getElementById('distractionCheck2');
+  var distractionCheck3 = document.getElementById('distractionCheck3');
+
+  function formatClock(totalSeconds){
+    var mm = Math.floor(totalSeconds / 60);
+    var ss = totalSeconds % 60;
+    return (mm < 10 ? '0' + mm : mm) + ':' + (ss < 10 ? '0' + ss : ss);
+  }
+
+  function updateDistractionNextState(){
+    distractionNextBtn.disabled = !(distractionTimerDone && distractionCheck1.checked && distractionCheck2.checked);
+  }
+
+  function resetDistractionFlow(){
+    if (distractionCountdownHandle){ clearInterval(distractionCountdownHandle); distractionCountdownHandle = null; }
+    distractionRemaining = DISTRACTION_SECONDS;
+    distractionTimerDone = false;
+    distractionClockEl.textContent = formatClock(distractionRemaining);
+    distractionCheck1.checked = false;
+    distractionCheck2.checked = false;
+    distractionCheck3.checked = false;
+    updateDistractionNextState();
+    distractionCountdownHandle = setInterval(function(){
+      distractionRemaining -= 1;
+      if (distractionRemaining <= 0){
+        clearInterval(distractionCountdownHandle);
+        distractionCountdownHandle = null;
+        distractionRemaining = 0;
+        distractionTimerDone = true;
+      }
+      distractionClockEl.textContent = formatClock(distractionRemaining);
+      updateDistractionNextState();
+    }, 1000);
+  }
+
+  [distractionCheck1, distractionCheck2].forEach(function(cb){
+    cb.addEventListener('change', updateDistractionNextState);
+  });
+
+  distractionNextBtn.addEventListener('click', function(){
+    showStep('task');
   });
 
   // ---------- task/action steps ----------
@@ -842,7 +1163,6 @@
     clearHistory();
     taskInput.value = '';
     taskContinue.disabled = true;
-    resetCauseChips();
     showStep('cause');
   });
 
