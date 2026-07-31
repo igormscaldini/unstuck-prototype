@@ -13,6 +13,9 @@ const MAX_TASK_LENGTH = 500;
 const MAX_HISTORY_ITEMS = 15;
 const MAX_HISTORY_ITEM_LENGTH = 300;
 const MODEL = "claude-haiku-4-5-20251001";
+// Haiku 4.5 doesn't support the newer web_search_20260209 (dynamic-filtering)
+// variant — that's Opus 4.6+/Sonnet 4.6+ only. Use the basic, still-current tool.
+const WEB_SEARCH_TOOL = { type: "web_search_20250305", name: "web_search", max_uses: 3 };
 
 // Best-effort in-memory rate limit (per warm instance only).
 const hits = new Map(); // ip -> [timestamps]
@@ -127,6 +130,15 @@ module.exports = async function handler(req, res) {
     "vague words or phrases like \"life stuff\", \"my project\", \"work\", \"that thing\", " +
     "\"school\"). If the task names a specific deliverable, person, deadline, event, or subject " +
     "matter — even briefly — treat it as OK, not BROAD, even if some details are still unstated.\n\n" +
+    "You have a web_search tool. Use it when the task names a specific tool, service, platform, " +
+    "API, or technical process whose exact steps you're not confident about from memory (e.g. " +
+    "\"set up conversion tracking between Stripe and GA4\", \"configure OAuth in Supabase\") — " +
+    "search first, then base your suggestion on what you actually found, not a guess. Skip " +
+    "searching for generic, personal, or non-technical tasks where your own knowledge is already " +
+    "reliable (e.g. \"write a first draft of the report\", \"call the dentist\"). Only search " +
+    "when it would meaningfully change the accuracy of the suggestion — don't search reflexively.\n\n" +
+    "Whether or not you searched, your visible reply must still be EXACTLY the two-line format " +
+    "below — no search commentary, no citations, no extra text before or after it.\n\n" +
     "Respond in EXACTLY this two-line format, nothing else, no markdown:\n" +
     "Line 1: the single word OK, or the single word BROAD.\n" +
     "Line 2: one or two short sentences, written as a direct instruction telling them what to do " +
@@ -151,8 +163,9 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 220,
+        max_tokens: 1500,
         system,
+        tools: [WEB_SEARCH_TOOL],
         messages: [{ role: "user", content: userContent }],
       }),
     });
@@ -165,11 +178,11 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await upstream.json();
-    const raw = (data.content || [])
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("")
-      .trim();
+    // With web_search enabled, content can include tool_use/tool_result blocks
+    // and, occasionally, brief text before a search. The actual formatted
+    // answer is always the last text block, so take only that one.
+    const textBlocks = (data.content || []).filter((b) => b.type === "text");
+    const raw = textBlocks.length ? textBlocks[textBlocks.length - 1].text.trim() : "";
 
     const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
     let tooBroad = false;

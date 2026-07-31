@@ -209,9 +209,24 @@
   }
   .link-btn:hover{color:var(--ct-text);}
 
+  @keyframes calmPulse{
+    0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.4;}
+    50%{transform:translate(-50%,-50%) scale(1.18);opacity:.7;}
+  }
   .timer-display{
     text-align:center;padding:14px 0 6px;
+    position:relative;
   }
+  .timer-display::before, .timer-ring::before{
+    content:'';
+    position:absolute;left:50%;top:50%;
+    width:150px;height:150px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(8,133,248,.28) 0%, rgba(254,203,2,.12) 55%, rgba(8,133,248,0) 75%);
+    animation:calmPulse 4.5s ease-in-out infinite;
+    z-index:0;pointer-events:none;
+  }
+  .timer-display .clock, .timer-display .step-title{position:relative;z-index:1;}
   .timer-display .clock{
     font-size:64px;font-weight:800;color:var(--ct-blue);
     letter-spacing:.02em;font-variant-numeric:tabular-nums;
@@ -220,6 +235,8 @@
   .timer-ring{
     width:180px;height:180px;margin:10px auto 6px;position:relative;
   }
+  .timer-ring::before{width:210px;height:210px;}
+  .timer-ring svg, .timer-ring .clock-center{position:relative;z-index:1;}
   .timer-ring svg{transform:rotate(-90deg);}
   .timer-ring circle{fill:none;stroke-width:10;}
   .timer-ring .bg{stroke:#eee;}
@@ -300,10 +317,10 @@
 
       <!-- STEP: TECHNIQUE — FEAR OF FAILURE (interactive R.A.I.N.-style flow) -->
       <div class="step" id="step-technique-fear">
-        <h1 class="step-title">Fear or anxiety: a one-minute technique</h1>
+        <h1 class="step-title">Fear of failure: a one-minute technique</h1>
 
         <div id="fearStage1">
-          <p class="step-help">Briefly describe your feelings about this task, and notice where in your body you feel it.</p>
+          <p class="step-help">Briefly describe what you're feeling right now, and notice where in your body you feel it.</p>
           <input type="text" id="fearFeelingInput" placeholder="e.g. fear of messing this up...">
           <div class="not-sure-label">Not sure? Pick one:</div>
           <div class="chips" id="fearFeelingChips"></div>
@@ -348,7 +365,7 @@
 
         <div id="motivationStage1">
           <p class="step-help">Picture for a few seconds how good it'll feel once this is done.</p>
-          <label style="font-size:14px;color:var(--ct-text-mid);display:block;margin:14px 0 8px;">From 1 to 10, how good would you feel about yourself about advancing or finishing this task?</label>
+          <label style="font-size:14px;color:var(--ct-text-mid);display:block;margin:14px 0 8px;">From 1 to 10, how good would it feel to make progress on whatever you're stuck on?</label>
           <div style="display:flex;align-items:center;gap:14px;">
             <input type="range" id="motivationRating" min="1" max="10" value="5" style="flex:1;accent-color:var(--ct-blue);">
             <span id="motivationRatingValue" style="font-weight:700;color:var(--ct-blue);font-size:20px;min-width:26px;text-align:center;">5</span>
@@ -362,7 +379,7 @@
         </div>
 
         <div id="motivationStage2" style="display:none;">
-          <p class="step-help">Is it worth a small time investment to make a little progress on it?</p>
+          <p class="step-help">Is it worth a small time investment to make a little progress right now?</p>
           <div class="chips" id="motivationWorthChips">
             <button type="button" class="chip" data-choice="yes">Yes, worth it</button>
             <button type="button" class="chip" data-choice="no">Not really sure</button>
@@ -417,7 +434,7 @@
           </label>
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
             <input type="checkbox" id="distractionCheck3" style="margin-top:3px;width:18px;height:18px;flex:none;">
-            <span>If applicable, tell people you'll be off the couch for 5 minutes.</span>
+            <span>If applicable, let people know you'll be heads-down for a few minutes.</span>
           </label>
         </div>
         <div class="btn-row">
@@ -542,23 +559,27 @@
   var CAUSES = [
     {
       key: 'fear',
-      label: 'Fear or anxiety',
-      icon: '<svg viewBox="0 0 64 64"><path d="M32 6 L54 14 V30 C54 46 44 56 32 60 C20 56 10 46 10 30 V14 Z" fill="none" stroke="#233b47" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M33 18 L26 34 L34 34 L27 50" fill="none" stroke="#0885f8" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg>'
+      label: 'Fear of failure',
+      icon: '<svg viewBox="0 0 64 64"><path d="M32 6 L54 14 V30 C54 46 44 56 32 60 C20 56 10 46 10 30 V14 Z" fill="none" stroke="#233b47" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M33 18 L26 34 L34 34 L27 50" fill="none" stroke="#0885f8" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+      transitionPhrase: "💙 That fear is real, and it's okay to feel it. You're capable of moving through this anyway."
     },
     {
       key: 'motivation',
       label: "Can't feel motivated",
-      icon: '<svg viewBox="0 0 64 64"><rect x="7" y="20" width="44" height="24" rx="6" fill="none" stroke="#233b47" stroke-width="4"/><rect x="53" y="27" width="6" height="10" rx="2" fill="#233b47"/><rect x="13" y="26" width="10" height="12" rx="2" fill="#0885f8"/></svg>'
+      icon: '<svg viewBox="0 0 64 64"><rect x="7" y="20" width="44" height="24" rx="6" fill="none" stroke="#233b47" stroke-width="4"/><rect x="53" y="27" width="6" height="10" rx="2" fill="#233b47"/><rect x="13" y="26" width="10" height="12" rx="2" fill="#0885f8"/></svg>',
+      transitionPhrase: "✨ It's okay to not feel like it right now. You don't need motivation to start, just one small step."
     },
     {
       key: 'fatigue',
       label: 'Too tired to start',
-      icon: '<svg viewBox="0 0 64 64"><path d="M13 26 H41 V40 a14 14 0 0 1 -14 14 H27 a14 14 0 0 1 -14 -14 Z" fill="none" stroke="#233b47" stroke-width="4" stroke-linejoin="round"/><path d="M41 30 H47 a8 8 0 0 1 0 16 H41" fill="none" stroke="#233b47" stroke-width="4"/><path d="M21 20 q-3 -5 0 -9" fill="none" stroke="#0885f8" stroke-width="3.5" stroke-linecap="round"/><path d="M31 20 q-3 -5 0 -9" fill="none" stroke="#0885f8" stroke-width="3.5" stroke-linecap="round"/></svg>'
+      icon: '<svg viewBox="0 0 64 64"><path d="M13 26 H41 V40 a14 14 0 0 1 -14 14 H27 a14 14 0 0 1 -14 -14 Z" fill="none" stroke="#233b47" stroke-width="4" stroke-linejoin="round"/><path d="M41 30 H47 a8 8 0 0 1 0 16 H41" fill="none" stroke="#233b47" stroke-width="4"/><path d="M21 20 q-3 -5 0 -9" fill="none" stroke="#0885f8" stroke-width="3.5" stroke-linecap="round"/><path d="M31 20 q-3 -5 0 -9" fill="none" stroke="#0885f8" stroke-width="3.5" stroke-linecap="round"/></svg>',
+      transitionPhrase: "🌙 Being tired is real too. Let's help your body catch up a little before we begin."
     },
     {
       key: 'distraction',
       label: "Can't stay focused",
-      icon: '<svg viewBox="0 0 64 64"><rect x="20" y="7" width="24" height="50" rx="6" fill="none" stroke="#233b47" stroke-width="4"/><line x1="28" y1="49" x2="36" y2="49" stroke="#233b47" stroke-width="4" stroke-linecap="round"/><circle cx="49" cy="15" r="4" fill="#0885f8"/><circle cx="13" cy="24" r="3" fill="#0885f8"/><circle cx="51" cy="34" r="2.5" fill="#0885f8"/></svg>'
+      icon: '<svg viewBox="0 0 64 64"><rect x="20" y="7" width="24" height="50" rx="6" fill="none" stroke="#233b47" stroke-width="4"/><line x1="28" y1="49" x2="36" y2="49" stroke="#233b47" stroke-width="4" stroke-linecap="round"/><circle cx="49" cy="15" r="4" fill="#0885f8"/><circle cx="13" cy="24" r="3" fill="#0885f8"/><circle cx="51" cy="34" r="2.5" fill="#0885f8"/></svg>',
+      transitionPhrase: "🎯 Losing focus isn't a failure. Let's clear the way so it's easier to stay with this."
     },
     {
       key: 'unsure',
