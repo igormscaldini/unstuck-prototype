@@ -303,7 +303,7 @@
         <h1 class="step-title">Fear or anxiety: a one-minute technique</h1>
 
         <div id="fearStage1">
-          <p class="step-help">Briefly describe your feelings about this task.</p>
+          <p class="step-help">Briefly describe your feelings about this task, and notice where in your body you feel it.</p>
           <input type="text" id="fearFeelingInput" placeholder="e.g. fear of messing this up...">
           <div class="not-sure-label">Not sure? Pick one:</div>
           <div class="chips" id="fearFeelingChips"></div>
@@ -315,7 +315,8 @@
 
         <div id="fearStage2" style="display:none;">
           <div class="task-recap" id="fearFeelingRecap"></div>
-          <p class="step-help" style="margin-top:16px;">Is that a fact about what's going to happen, or a thought passing through your mind?</p>
+          <p class="step-help" style="margin-top:16px;">Whatever it is, it's okay to feel it. No need to push it away or judge it right now.</p>
+          <p class="step-help">Is that a fact about what's going to happen, or a thought passing through your mind?</p>
           <div class="chips" id="fearFactThoughtChips">
             <button type="button" class="chip" data-choice="fact">It's a fact</button>
             <button type="button" class="chip" data-choice="thought">It's a thought</button>
@@ -352,8 +353,8 @@
             <input type="range" id="motivationRating" min="1" max="10" value="5" style="flex:1;accent-color:var(--ct-blue);">
             <span id="motivationRatingValue" style="font-weight:700;color:var(--ct-blue);font-size:20px;min-width:26px;text-align:center;">5</span>
           </div>
-          <label style="font-size:14px;color:var(--ct-text-mid);display:block;margin:18px 0 8px;">Optional: briefly describe how good you'll feel after you're done with this task.</label>
-          <textarea id="motivationFeelGoodInput" style="min-height:54px;" placeholder="e.g. relieved, proud I finally got it off my plate..."></textarea>
+          <label style="font-size:14px;color:var(--ct-text-mid);display:block;margin:18px 0 8px;">Optional: picture reaching the finish line. What's one small milestone in front of you right now?</label>
+          <textarea id="motivationMilestoneInput" style="min-height:54px;" placeholder="e.g. getting a rough outline down..."></textarea>
           <div class="btn-row">
             <button class="btn btn-primary" id="motivationStage1Continue">Continue →</button>
             <button class="link-btn" id="motivationStage1Back">← choose a different cause</button>
@@ -412,7 +413,7 @@
           </label>
           <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;cursor:pointer;">
             <input type="checkbox" id="distractionCheck2" style="margin-top:3px;width:18px;height:18px;flex:none;">
-            <span>Close extra tabs.</span>
+            <span>Close extra tabs and silence notifications.</span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
             <input type="checkbox" id="distractionCheck3" style="margin-top:3px;width:18px;height:18px;flex:none;">
@@ -875,7 +876,7 @@
   var motivationWorthChips = document.getElementById('motivationWorthChips');
   var motivationReflectionNote = document.getElementById('motivationReflectionNote');
   var motivationWorthChoice = null;
-  var motivationFeelGoodInput = document.getElementById('motivationFeelGoodInput');
+  var motivationMilestoneInput = document.getElementById('motivationMilestoneInput');
 
   function showMotivationStage(n){
     [1, 2].forEach(function(i){
@@ -886,7 +887,7 @@
   function resetMotivationFlow(){
     motivationRating.value = 5;
     motivationRatingValue.textContent = '5';
-    motivationFeelGoodInput.value = '';
+    motivationMilestoneInput.value = '';
     motivationWorthChoice = null;
     motivationStage2Continue.disabled = true;
     motivationReflectionNote.style.display = 'none';
